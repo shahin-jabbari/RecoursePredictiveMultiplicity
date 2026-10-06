@@ -42,6 +42,7 @@ polish-companies_clean_uncut.csv:
   The figures explicitly retain a target-audit label.
   Source: https://archive.ics.uci.edu/dataset/365/polish+companies+bankruptcy+data
 
+
  germanc.csv:
   Credit-risk classification: good versus bad credit. The original task has
   1,000 observations and 20 attributes; this processed file has 67 coordinates.
@@ -53,6 +54,7 @@ polish-companies_clean_uncut.csv:
   class 2 mapped to local 1 (41 matches). The historical local target 1 is
   retained for numerical replication and is explicitly flagged as bad credit.
   Source: https://archive.ics.uci.edu/dataset/144/statlog+german+credit+data
+
 
 GiveMeSomeCredit.csv:
   Predict serious delinquency within two years. The ten original predictors
