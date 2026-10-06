@@ -1,0 +1,187 @@
+"""Small regressions for numerical validity, pairing, and portable replication."""
+from pathlib import Path
+import json
+import tempfile
+import unittest
+from unittest.mock import patch
+
+import numpy as np
+import torch
+from scipy.optimize import minimize_scalar
+
+from utils import recourse_core as rc
+from utils import recourse_results as rr
+from utils import recourse_campaign as campaign
+from utils import recourse_convergence as gap
+from utils import recourse_multiplicity as burden
+from utils import recourse_statistics as stats
+from utils import recourse_trees as trees
+from utils import recourse_runtime as runtime
+
+torch.set_num_threads(1)
+
+
+def logits(slopes=(1.3,-.8),biases=(-.2,.5)):
+    result=[]
+    for a,b in zip(slopes,biases):
+        m=rc.LogisticRegressionModel(1,42)
+        rc.set_model_weights(m,torch.tensor([a,b]))
+        result.append(m)
+    return result
+
+
+def stump(left,right,threshold=0.):
+    return trees.TreeSpec(np.array([1,-1,-1]),np.array([2,-1,-1]),
+        np.array([0,-2,-2]),np.array([threshold,-2.,-2.]),np.array([.5,left,right]))
+
+
+class DataAndModes(unittest.TestCase):
+    def test_all_datasets_are_local_and_complete(self):
+        with patch('urllib.request.urlopen',side_effect=AssertionError('Network access forbidden')):
+            frame=runtime.dataset_inventory()
+        expected={'Synthetic':(2000,2),'COMPAS':(6392,7),'German':(600,67),
+                  'Polish':(864,64),'Give_Me_Some_Credit':(120269,10),'Folktables':(195665,10)}
+        for r in frame.itertuples():self.assertEqual((r.observations,r.features),expected[r.dataset])
+
+    def test_synthetic_neural_sample_is_bundled(self):
+        X,y=rc.get_data_synthetic(20000)
+        self.assertEqual(X.shape,(20000,2));self.assertEqual(y.sum(),10000)
+
+    def test_full_gap_profiles_match_larger_experiments(self):
+        c=campaign.profile_settings('full',section='convergence_duality')
+        t=campaign.profile_settings('full',section='tree_convergence')
+        self.assertEqual((c['folds'],c['max_instances'],c['T']),(10,20,200))
+        self.assertEqual((t['folds'],t['max_instances'],t['T']),(10,20,100))
+
+    def test_quick_is_small_and_preserves_three_competing_sizes(self):
+        p=campaign.profile_settings('quick',section='cost_validity')
+        self.assertEqual((p['folds'],p['max_instances'],p['ORPM_T'],p['inner_oracle_steps']),(2,3,10,25))
+        self.assertEqual(p['datasets'],['Synthetic','COMPAS'])
+        jobs=campaign.jobs_for('cost_validity','quick')
+        self.assertEqual({sum(j['counts']) for j in jobs},{6,12,24})
+
+    def test_full_generalization_preserves_exploratory_protocol(self):
+        p=campaign.profile_settings('full',section='generalization')
+        self.assertEqual((p['folds'],p['max_instances'],p['ORPM_T'],p['T']),(3,10,25,50))
+
+    def test_train_validation_test_are_disjoint_and_scaling_uses_train(self):
+        X,y=rc.get_data_synthetic(2000)
+        c=rc.prepare_split(X,y,seed=42,dataset_name='Synthetic')
+        self.assertFalse(set(c.train_ids)&set(c.validation_ids))
+        self.assertFalse(set(c.train_ids)&set(c.test_ids))
+        self.assertFalse(set(c.validation_ids)&set(c.test_ids))
+        np.testing.assert_allclose(c.scaler.mean_,X.iloc[c.train_ids].mean().to_numpy())
+
+    def test_target_audit_is_explicit(self):
+        self.assertIn('bad credit',rc.LABEL_PROVENANCE['German'])
+        self.assertIn('unverified',rc.LABEL_PROVENANCE['Polish'])
+        self.assertEqual(rc.FAVORABLE_LABEL['COMPAS'],0)
+
+
+class StatisticalProtocol(unittest.TestCase):
+    def test_seeds_not_instances_are_inference_units(self):
+        rows=[{'seed':1,'valid':0}]*9+[{'seed':2,'valid':1}]
+        result=stats.metric_summary(rows,'valid')
+        self.assertAlmostEqual(result['mean'],.5)
+        self.assertEqual(result['n_seeds'],2)
+
+    def test_zero_variance_is_flagged(self):
+        result=stats.mean_ci([100,100])
+        self.assertTrue(np.isnan(result['ci_low']))
+        self.assertEqual(result['ci_status'],'zero_observed_seed_variance')
+
+    def test_worst_model_and_every_individual_differ(self):
+        rows=[]
+        for seed in [1,2]:
+            for j,values in enumerate([(1,0),(0,1)]):
+                for i,value in enumerate(values):
+                    rows.append(dict(source_version='v6',source_mode='quick',dataset='Synthetic',
+                        family='differentiable',aggregation='probability',config='2 LR',
+                        n_models=2,budget=1.,seed=seed,instance_id=j,model_index=i,
+                        individual_valid=bool(value),joint_valid=False,certified_infeasible=False))
+        seeds,summary,_=burden.summarize(rows)
+        self.assertTrue((seeds.worst_individual_validity==50).all())
+        self.assertTrue((seeds.all_individually_validity==0).all())
+        self.assertTrue((seeds.burden_worst==50).all())
+
+
+class OraclesAndArtifacts(unittest.TestCase):
+    def test_convex_bounds_contain_independent_optimum(self):
+        oracle=gap.ConvexLogitOracle(logits(),[0.],1.)
+        for w in [np.array([.5,.5]),np.array([.1,.9])]:
+            point,info=oracle.solve(w)
+            ref=minimize_scalar(lambda z:w@oracle.losses([z]),bounds=(-1.,1.),method='bounded')
+            truth=min(ref.fun,w@oracle.losses([-1.]),w@oracle.losses([1.]))
+            self.assertLessEqual(info['lower_bound'],truth+1e-8)
+            self.assertGreaterEqual(info['objective'],truth-1e-8)
+
+    def test_gap_uses_preupdate_weights_and_average_point(self):
+        point,rows,trace=gap.convex_trajectory(logits(),np.array([0.]),1.,T=7,every=3)
+        self.assertEqual([r['round'] for r in rows],[1,3,6,7])
+        for r in rows:
+            n=r['round']
+            np.testing.assert_allclose(r['average_weights'],trace['weights'][:n].mean(axis=0))
+            np.testing.assert_allclose(r['average_point'],trace['points'][:n].mean(axis=0))
+            self.assertLessEqual(r['gap_upper_bound'],r['theory_upper_bound']+1e-6)
+
+    def test_quick_inner_budget_is_applied(self):
+        token=rr._ACTIVE_SETTINGS.set({'inner_oracle_steps':3})
+        try:
+            p=rc.oracle_gradient_descent([.5,.5],logits(),torch.tensor([0.]),1.,rc.recourse_loss,num_steps=20)
+            self.assertEqual(p.recourse_info['inner_steps'],3)
+        finally:rr._ACTIVE_SETTINGS.reset(token)
+
+    def test_training_cache_preserves_weights_and_depends_on_labels(self):
+        X=np.array([[-1.],[1.]],dtype=np.float32);y=np.array([0,1])
+        rc._TRAINING_CACHE.clear()
+        a=rc.train_model(rc.LogisticRegressionModel(1,42),X,y,epochs=4,seed=42)
+        b=rc.train_model(rc.LogisticRegressionModel(1,42),X,y,epochs=4,seed=42)
+        for k,v in a.state_dict().items():torch.testing.assert_close(v,b.state_dict()[k],rtol=0,atol=0)
+        self.assertTrue(b.training_settings['cache_hit'])
+        c=rc.train_model(rc.LogisticRegressionModel(1,42),X,1-y,epochs=4,seed=42)
+        self.assertFalse(torch.equal(a.linear.weight,c.linear.weight))
+
+    def test_modes_and_repeated_invocations_cannot_clobber_results(self):
+        old=rr.NOTEBOOK_VERSION,rr.RESULTS_ROOT,rc.RESULTS_DIR
+        try:
+            with tempfile.TemporaryDirectory() as d:
+                rr.configure_notebook('v6',d)
+                a=rr.start_notebook_experiment('example','quick')
+                (a/'sentinel.txt').write_text('previous run')
+                b=rr.start_notebook_experiment('example','quick')
+                c=rr.start_notebook_experiment('example','full')
+                self.assertEqual((a/'sentinel.txt').read_text(),'previous run')
+                self.assertEqual(len({a,b,c}),3)
+                self.assertIn('quick',a.parts);self.assertIn('full',c.parts)
+        finally:rr.NOTEBOOK_VERSION,rr.RESULTS_ROOT,rc.RESULTS_DIR=old
+
+
+class TreeConsistency(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        try:runtime.solver_check()
+        except RuntimeError as exc:raise unittest.SkipTest(str(exc))
+
+    def test_opposite_splits_cannot_both_choose_favorable_leaf(self):
+        models=[trees.TreeModel([stump(1,0)],1),trees.TreeModel([stump(0,1)],1)]
+        solver=trees.TreeOracle(models,torch.tensor([-.25]),1.,time_limit=2.)
+        try:
+            p=solver.solve([.5,.5])
+            self.assertTrue(p.recourse_info['incumbent_verified'])
+            self.assertAlmostEqual(p.recourse_info['objective'],.5,places=7)
+            p=solver.solve(objective='minimax')
+            self.assertAlmostEqual(p.recourse_info['objective'],1.,places=7)
+        finally:solver.close()
+
+    def test_narrow_valid_region_is_preserved(self):
+        models=[trees.TreeModel([stump(0,1,0.)],1),trees.TreeModel([stump(1,0,1e-10)],1)]
+        solver=trees.TreeOracle(models,torch.tensor([-.25]),1.,time_limit=2.)
+        try:
+            p=solver.solve(objective='minimax')
+            self.assertTrue(p.recourse_info['incumbent_verified'])
+            np.testing.assert_array_equal(trees.probabilities(models,p),[1.,1.])
+            self.assertGreater(float(p[0]),0);self.assertLessEqual(float(p[0]),1e-10)
+        finally:solver.close()
+
+
+if __name__=='__main__':unittest.main()
