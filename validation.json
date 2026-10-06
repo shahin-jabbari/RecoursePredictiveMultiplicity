@@ -1,0 +1,58 @@
+{
+  "package": "RecourseModelMultiplicity-v6",
+  "default_mode": "quick",
+  "validated_on": "2026-10-06",
+  "notebook_validation": "valid nbformat 4; one notebook; outputs cleared",
+  "execution": {
+    "success": true,
+    "method": "All 14 Python code cells executed sequentially in a fresh Python process and a separate package copy with no results. Inline display of plots disabled; all plot files were generated.",
+    "elapsed_seconds": 197.74043862500002,
+    "code_cells": 14,
+    "source_hashes": {
+      "recourse_statistics.py": "3f82e7106113564872efec571cffea2e727be89bad7137c036d6f53d08a42788",
+      "recourse_results.py": "516c4aa9075cdb7a0706b2478a20dacc6162a8c66c6ae70a3a21bb43657d8b97",
+      "recourse_trees.py": "affe48c4816433bd2e0efe389953c80ac783b3da5a2004b0ecb3ac0ef675f2e4",
+      "recourse_convergence.py": "af8d6e5936e341050c44f6796d337209d9bfc00cf2451ca2615a262e6fed7a38",
+      "recourse_runtime.py": "616ad5a0e552c3934e9057609b1eb01c2109bb95d30c9fac9087dd9bb7e6a409",
+      "__init__.py": "6fb1aa3293b19f1d60be71f280234b27ff0c8f1a6a3449325f291193c95b3383",
+      "recourse_multiplicity.py": "33c92791ae6199a0ceb3e1be11c8c723810dfd77030f402c9f208b1e2a4f6303",
+      "recourse_reporting.py": "e81042a74895b36cb5fec81639f7321bdacdbf4574f14048b3383f7e55157cf7",
+      "recourse_campaign.py": "b92698170fb30ac0604734a3f459b2f374e42b36f27ab85f079804cc80b3a9c1",
+      "recourse_experiments.py": "5109d26415dc05e49ae5d486aaf1f4f08ef95353041c5961b9b3d7a54350aa96",
+      "recourse_baselines.py": "242aa167a25389a5e9eba193dee9595886c88f1cf51eec07ec440f6939d238da",
+      "recourse_tree_experiments.py": "cdccf43ed27c17171208a075aa7315ce12e9f310280af3ac915c3c36189e39c3",
+      "recourse_core.py": "a2103cb8c63f211bdb446989494a5c75a90bb36a4beb1c3af36020175c0bb905"
+    },
+    "hardware": "macOS-26.6.2-arm64-arm-64bit"
+  },
+  "experiment_audit": {
+    "completed_runs": 42,
+    "recorded_outcomes": 1584,
+    "unexpected_errors": 0,
+    "differentiable_singleton_evaluations": 1512,
+    "tree_singleton_evaluations": 324,
+    "figure_pdf_files": 56,
+    "dataset_csv_tables": 104
+  },
+  "regression_tests": {
+    "tests": 17,
+    "failures": 0,
+    "errors": 0,
+    "includes": "offline dataset loading, training-only scaling, seed-level CIs, multiplicity aggregation, convex gap bounds, training cache, output isolation, and tree split consistency"
+  },
+  "package_checks": {
+    "no_previous_results": true,
+    "no_personal_absolute_paths": true,
+    "local_dataset_loading": true,
+    "all_six_datasets_loaded": true,
+    "all_python_sources_parse": true,
+    "timestamped_mode_namespaces": true
+  },
+  "limitations": [
+    "Quick is a functionality run, not paper-level statistical evidence.",
+    "The optional neural MIQCP reference is disabled in quick mode.",
+    "German uses the recorded bad-credit target; Polish target orientation is unverified.",
+    "Larger intermediate/full campaigns were not executed as part of package validation.",
+    "Solver time-limited incumbents and floating-point outcomes can vary across hardware."
+  ]
+}
