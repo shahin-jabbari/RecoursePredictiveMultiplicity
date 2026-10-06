@@ -1,0 +1,56 @@
+{
+  "files": [
+    {
+      "file": "ACSIncome_CA_2018.csv.gz",
+      "dataset": "Folktables",
+      "bytes": 1579183,
+      "sha256": "c71f5d48a18d3cda367a58050b079294c58412796fc0f7005dd6bda719973363",
+      "source": "https://github.com/socialfoundations/folktables; California 2018 one-year ACSIncome task"
+    },
+    {
+      "file": "GiveMeSomeCredit.csv",
+      "dataset": "Give_Me_Some_Credit",
+      "bytes": 7414964,
+      "sha256": "e333eb8001576d7eb140cdfad9801c6b000ddfa6a528b6268a640230eb2a9994",
+      "source": "https://www.kaggle.com/c/GiveMeSomeCredit"
+    },
+    {
+      "file": "Synthetic.csv",
+      "dataset": "Synthetic",
+      "bytes": 82266,
+      "sha256": "b775a38091a627eac66ef2eb39bbf86b506f6198b73556784101734b912d2245",
+      "source": "Generated two-class Gaussian mixture; seed 0; 2,000 observations."
+    },
+    {
+      "file": "Synthetic_nonlinear.csv",
+      "dataset": "Synthetic",
+      "bytes": 822379,
+      "sha256": "c9820598b5df2ad00b569739dd9669db72840413d4d7b6eb1f4c64c2adb0c99a",
+      "source": "Same generating distribution; seed 0; 20,000 observations for larger neural comparisons."
+    },
+    {
+      "file": "compas.csv",
+      "dataset": "COMPAS",
+      "bytes": 125173,
+      "sha256": "817e119e148af477908ee55141f67ce992c8186359b2f91af4d3ee14aa467fdb",
+      "source": "https://www.kaggle.com/datasets/danofer/compass"
+    },
+    {
+      "file": "germanc.csv",
+      "dataset": "German",
+      "bytes": 146694,
+      "sha256": "ddb01ecfc137ed253dc91286588b2e9ac48f60999e788047a9d830d91029de7d",
+      "source": "https://archive.ics.uci.edu/dataset/144/statlog+german+credit+data"
+    },
+    {
+      "file": "polish-companies_clean_uncut.csv",
+      "dataset": "Polish",
+      "bytes": 10193796,
+      "sha256": "5c694ef4e492920894bac68c22ec65d107cb86f13d0fa6f1692ebe79833bcc18",
+      "source": "https://archive.ics.uci.edu/dataset/365/polish+companies+bankruptcy+data"
+    }
+  ],
+  "acs_preparation": "ACSIncome.df_to_numpy on the cached original CA 2018 person-level ACS file; folktables 0.0.12; 195665 rows and 10 predictors",
+  "feature_domain": "Continuous standardized coordinates with dataset-specific fixed features",
+  "target_policy": "Historical recorded targets; German/Polish marked for audit"
+}
