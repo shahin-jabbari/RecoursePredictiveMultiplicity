@@ -1,4 +1,4 @@
-name: recourse-v6
+name: recourse-v6diverse
 channels:
   - conda-forge
 dependencies:

@@ -1,0 +1,66 @@
+{
+  "status": "passed",
+  "updated_utc": "20261012T135249Z",
+  "training_protocol": "checked_classifier_training_v2",
+  "regression_tests": 64,
+  "notebook_setup_executed": true,
+  "end_to_end": {
+    "duality_gap": {
+      "directory": "/Users/sj987/Documents/ChatGPT/Recourse/output/V7-Shared-Training-Update/results/V7/quick/majority/diversity_on/duality_gap/20261012T135057.703232Z_2eb3f63c6a",
+      "rows": 1
+    },
+    "mixed_duality_gap": {
+      "directory": "/Users/sj987/Documents/ChatGPT/Recourse/output/V7-Shared-Training-Update/results/V7/quick/majority/diversity_on/mixed_duality_gap/20261012T135100.093156Z_5ebf99d952",
+      "rows": 1
+    },
+    "linear_baselines": {
+      "directory": "/Users/sj987/Documents/ChatGPT/Recourse/output/V7-Shared-Training-Update/results/V7/quick/majority/diversity_on/linear_baselines/20261012T135102.282178Z_4bd7c0b655",
+      "rows": 1
+    },
+    "nonlinear_baselines": {
+      "directory": "/Users/sj987/Documents/ChatGPT/Recourse/output/V7-Shared-Training-Update/results/V7/quick/majority/diversity_on/nonlinear_baselines/20261012T135102.571663Z_b93cd5c638",
+      "rows": 1
+    },
+    "cost_validity": {
+      "directory": "/Users/sj987/Documents/ChatGPT/Recourse/output/V7-Shared-Training-Update/results/V7/quick/majority/diversity_on/cost_validity/20261012T135103.348745Z_818ae287d7",
+      "rows": 1
+    },
+    "generalization": {
+      "directory": "/Users/sj987/Documents/ChatGPT/Recourse/output/V7-Shared-Training-Update/results/V7/quick/majority/diversity_on/generalization/20261012T135104.119343Z_4c469727d4",
+      "rows": 1
+    },
+    "burden": {
+      "rows": 8
+    },
+    "compatible_resume": true,
+    "German_mixed": {
+      "accepted": 3,
+      "criteria": [
+        "global_regularized_training_objective_bound",
+        "empirical_continued_optimization_stability",
+        "empirical_continued_optimization_stability"
+      ]
+    },
+    "status": "passed",
+    "seconds": 23.562934958
+  },
+  "limitations": "Neural criteria are empirical; no guarantee of global neural or ORPM convergence.",
+  "changes": [
+    "utils/recourse_results.py",
+    "utils/recourse_runtime.py",
+    "utils/recourse_diversity.py",
+    "utils/recourse_rounds_study.py",
+    "utils/recourse_campaign.py",
+    "utils/recourse_experiments.py",
+    "utils/recourse_training.py",
+    "utils/recourse_core.py",
+    "utils/tests/test_training.py",
+    "RecourseModelMultiplicity-v7.ipynb",
+    "README.txt"
+  ],
+  "defaults": {
+    "RUN_MODE": "quick",
+    "CANDIDATE_SELECTION": "majority",
+    "diversity": true
+  }
+}

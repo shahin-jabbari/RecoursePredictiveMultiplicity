@@ -1,58 +1,156 @@
 {
-  "package": "RecourseModelMultiplicity-v6",
-  "default_mode": "quick",
-  "validated_on": "2026-10-06",
-  "notebook_validation": "valid nbformat 4; one notebook; outputs cleared",
-  "execution": {
-    "success": true,
-    "method": "All 14 Python code cells executed sequentially in a fresh Python process and a separate package copy with no results. Inline display of plots disabled; all plot files were generated.",
-    "elapsed_seconds": 197.74043862500002,
-    "code_cells": 14,
-    "source_hashes": {
-      "recourse_statistics.py": "3f82e7106113564872efec571cffea2e727be89bad7137c036d6f53d08a42788",
-      "recourse_results.py": "516c4aa9075cdb7a0706b2478a20dacc6162a8c66c6ae70a3a21bb43657d8b97",
-      "recourse_trees.py": "affe48c4816433bd2e0efe389953c80ac783b3da5a2004b0ecb3ac0ef675f2e4",
-      "recourse_convergence.py": "af8d6e5936e341050c44f6796d337209d9bfc00cf2451ca2615a262e6fed7a38",
-      "recourse_runtime.py": "616ad5a0e552c3934e9057609b1eb01c2109bb95d30c9fac9087dd9bb7e6a409",
-      "__init__.py": "6fb1aa3293b19f1d60be71f280234b27ff0c8f1a6a3449325f291193c95b3383",
-      "recourse_multiplicity.py": "33c92791ae6199a0ceb3e1be11c8c723810dfd77030f402c9f208b1e2a4f6303",
-      "recourse_reporting.py": "e81042a74895b36cb5fec81639f7321bdacdbf4574f14048b3383f7e55157cf7",
-      "recourse_campaign.py": "b92698170fb30ac0604734a3f459b2f374e42b36f27ab85f079804cc80b3a9c1",
-      "recourse_experiments.py": "5109d26415dc05e49ae5d486aaf1f4f08ef95353041c5961b9b3d7a54350aa96",
-      "recourse_baselines.py": "242aa167a25389a5e9eba193dee9595886c88f1cf51eec07ec440f6939d238da",
-      "recourse_tree_experiments.py": "cdccf43ed27c17171208a075aa7315ce12e9f310280af3ac915c3c36189e39c3",
-      "recourse_core.py": "a2103cb8c63f211bdb446989494a5c75a90bb36a4beb1c3af36020175c0bb905"
-    },
-    "hardware": "macOS-26.6.2-arm64-arm-64bit"
+  "version": "V7",
+  "validated_at_utc": "2026-10-07T23:53:17.389870+00:00",
+  "status": "passed",
+  "unit_tests": {
+    "count": 42,
+    "status": "passed",
+    "command": "python -m unittest discover -s utils/tests -p 'test_*.py' -v",
+    "note": "All 42 tests pass after default selection switched to majority. Reference-cohort invariance test now sets reference explicitly."
   },
-  "experiment_audit": {
-    "completed_runs": 42,
-    "recorded_outcomes": 1584,
-    "unexpected_errors": 0,
-    "differentiable_singleton_evaluations": 1512,
-    "tree_singleton_evaluations": 324,
-    "figure_pdf_files": 56,
-    "dataset_csv_tables": 104
+  "notebook": {
+    "schema": "nbformat 4.5",
+    "cells": 31,
+    "code_cells_parse": true,
+    "outputs_empty": true
   },
-  "regression_tests": {
-    "tests": 17,
-    "failures": 0,
-    "errors": 0,
-    "includes": "offline dataset loading, training-only scaling, seed-level CIs, multiplicity aggregation, convex gap bounds, training cache, output isolation, and tree split consistency"
+  "dataset_manifest_checksums": "passed",
+  "python_source_syntax": "passed",
+  "configured_results_root_index_check": "passed",
+  "end_to_end_checks": {
+    "status": "passed",
+    "cases": [
+      [
+        "reference",
+        "duality_gap"
+      ],
+      [
+        "reference",
+        "mixed_duality_gap"
+      ],
+      [
+        "reference",
+        "linear_baselines"
+      ],
+      [
+        "reference",
+        "generalization"
+      ],
+      [
+        "reference",
+        "nonlinear_baselines"
+      ],
+      [
+        "reference",
+        "cost_validity"
+      ],
+      [
+        "reference",
+        "tree_duality_gap"
+      ],
+      [
+        "reference",
+        "tree_comparison"
+      ],
+      [
+        "reference",
+        "tree_tradeoff"
+      ],
+      [
+        "reference",
+        "burden_cost_validity"
+      ],
+      [
+        "reference",
+        "burden_tree_tradeoff"
+      ],
+      [
+        "reference",
+        "paired_diversity"
+      ],
+      [
+        "majority",
+        "duality_gap"
+      ],
+      [
+        "majority",
+        "mixed_duality_gap"
+      ],
+      [
+        "majority",
+        "linear_baselines"
+      ],
+      [
+        "majority",
+        "generalization"
+      ],
+      [
+        "majority",
+        "nonlinear_baselines"
+      ],
+      [
+        "majority",
+        "cost_validity"
+      ],
+      [
+        "majority",
+        "tree_duality_gap"
+      ],
+      [
+        "majority",
+        "tree_comparison"
+      ],
+      [
+        "majority",
+        "tree_tradeoff"
+      ],
+      [
+        "majority",
+        "burden_cost_validity"
+      ],
+      [
+        "majority",
+        "burden_tree_tradeoff"
+      ],
+      [
+        "majority",
+        "paired_diversity"
+      ]
+    ],
+    "case_count": 24,
+    "elapsed_seconds": 34.966056042000005,
+    "settings": "Synthetic only; one seed and one individual per job; 3 gap rounds; 2 comparison rounds; 10 training epochs; smaller candidate bank; one budget. Overrides existed only in the validation process.",
+    "saved_artifacts_checked": [
+      "selection audits",
+      "instance records",
+      "metadata",
+      "summaries",
+      "figures",
+      "burden outputs",
+      "paired diversity outputs"
+    ],
+    "scientific_interpretation": "Functionality checks only. No new full quick/intermediate/full scientific campaign was launched."
   },
-  "package_checks": {
-    "no_previous_results": true,
-    "no_personal_absolute_paths": true,
-    "local_dataset_loading": true,
-    "all_six_datasets_loaded": true,
-    "all_python_sources_parse": true,
-    "timestamped_mode_namespaces": true
+  "known_requirements": [
+    "Licensed Gurobi for tree solvers; full-size license for mixed neural duality bounds.",
+    "Quick defaults are exploratory (2 seeds and at most 3 individuals per seed/configuration)."
+  ],
+  "legacy_results": "V4/V5 saved results were not modified.",
+  "default_controls": {
+    "RUN_MODE": "quick",
+    "CANDIDATE_SELECTION": "majority",
+    "diversity": true
   },
-  "limitations": [
-    "Quick is a functionality run, not paper-level statistical evidence.",
-    "The optional neural MIQCP reference is disabled in quick mode.",
-    "German uses the recorded bad-credit target; Polish target orientation is unverified.",
-    "Larger intermediate/full campaigns were not executed as part of package validation.",
-    "Solver time-limited incumbents and floating-point outcomes can vary across hardware."
-  ]
+  "bundled_datasets_load_check": {
+    "status": "passed",
+    "datasets": [
+      "Synthetic",
+      "COMPAS",
+      "German",
+      "Give_Me_Some_Credit",
+      "Polish",
+      "Folktables"
+    ]
+  },
+  "results_folder": "Included as results/ with README; no scientific outputs bundled."
 }

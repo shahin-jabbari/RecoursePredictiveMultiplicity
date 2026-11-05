@@ -1,0 +1,5 @@
+{
+  "legacy_results_root": "/Users/sj987/Documents/ChatGPT/Code/Predictive_Multiplicity_Recourse/results_corrected",
+  "legacy_results_access": "optional read-only; not needed for fresh V7 runs",
+  "new_results": "results/V7/<mode>/<selection>/<diversity>/<experiment>/<run-id>"
+}

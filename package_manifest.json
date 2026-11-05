@@ -1,160 +1,245 @@
 {
-  "package": "RecourseModelMultiplicity-v6",
-  "notebook": "RecourseModelMultiplicity-v6.ipynb",
-  "default_mode": "quick",
+  "version": "V7",
+  "source": "RecourseModelMultiplicity-V6diverse-GMC",
+  "created_at_utc": "2026-10-07T23:53:17.398296+00:00",
+  "defaults": {
+    "RUN_MODE": "quick",
+    "CANDIDATE_SELECTION": "majority",
+    "diversity": true
+  },
   "files": [
     {
-      "path": "README.txt",
-      "bytes": 11903,
-      "sha256": "8511c90a4b95d219af893230067fa67d54684b1571c8460787515fd7ab8aa519"
+      "file": "README.txt",
+      "bytes": 13802,
+      "sha256": "f4c6910e1872a06a233c8d5d32a2d21fb84f5f2d2de6933ae524e471767e7a11"
     },
     {
-      "path": "RecourseModelMultiplicity-v6.ipynb",
-      "bytes": 16615,
-      "sha256": "1ab6f252ef30145c9f595d96b045eab9640bae034f20b5fa9097d986d1251390"
+      "file": "RecourseModelMultiplicity-v7.ipynb",
+      "bytes": 21746,
+      "sha256": "bac3e2dc46084e7688ff1d037d939a3fc954cfe934ef19a0007de0fd21a38314"
     },
     {
-      "path": "dataset/ACSIncome_CA_2018.csv.gz",
+      "file": "dataset/ACSIncome_CA_2018.csv.gz",
       "bytes": 1579183,
       "sha256": "c71f5d48a18d3cda367a58050b079294c58412796fc0f7005dd6bda719973363"
     },
     {
-      "path": "dataset/GiveMeSomeCredit.csv",
+      "file": "dataset/GiveMeSomeCredit.csv",
       "bytes": 7414964,
       "sha256": "e333eb8001576d7eb140cdfad9801c6b000ddfa6a528b6268a640230eb2a9994"
     },
     {
-      "path": "dataset/README.txt",
-      "bytes": 5070,
-      "sha256": "faae3de9256d44712eb7b266a76cd020f9fe0319973c58100c63c8665d7c98ea"
+      "file": "dataset/README.txt",
+      "bytes": 5415,
+      "sha256": "9574509bc3b9e6f291219defeb3f779780b5f54c8bef11e893543eca7a1024a8"
     },
     {
-      "path": "dataset/Synthetic.csv",
+      "file": "dataset/Synthetic.csv",
       "bytes": 82266,
       "sha256": "b775a38091a627eac66ef2eb39bbf86b506f6198b73556784101734b912d2245"
     },
     {
-      "path": "dataset/Synthetic_nonlinear.csv",
+      "file": "dataset/Synthetic_nonlinear.csv",
       "bytes": 822379,
       "sha256": "c9820598b5df2ad00b569739dd9669db72840413d4d7b6eb1f4c64c2adb0c99a"
     },
     {
-      "path": "dataset/compas.csv",
+      "file": "dataset/compas.csv",
       "bytes": 125173,
       "sha256": "817e119e148af477908ee55141f67ce992c8186359b2f91af4d3ee14aa467fdb"
     },
     {
-      "path": "dataset/germanc.csv",
+      "file": "dataset/germanc.csv",
       "bytes": 146694,
       "sha256": "ddb01ecfc137ed253dc91286588b2e9ac48f60999e788047a9d830d91029de7d"
     },
     {
-      "path": "dataset/manifest.json",
-      "bytes": 2260,
-      "sha256": "4df985d7cdb8b2104ffd8428dd53c59d9d4aa41f38d6fd63a4e9dad15235e61c"
+      "file": "dataset/manifest.json",
+      "bytes": 2315,
+      "sha256": "49006837c24f2ec746bf04df20d8010f4ff56d1852af49d65a871bfcdac57a4f"
     },
     {
-      "path": "dataset/polish-companies_clean_uncut.csv",
+      "file": "dataset/polish-companies_clean_uncut.csv",
       "bytes": 10193796,
       "sha256": "5c694ef4e492920894bac68c22ec65d107cb86f13d0fa6f1692ebe79833bcc18"
     },
     {
-      "path": "environment.yml",
-      "bytes": 119,
-      "sha256": "65de4502d4268780797e8424267d885daf8bbb1626fa1bb858e9ca3e8f64423e"
+      "file": "environment.yml",
+      "bytes": 126,
+      "sha256": "76566736ef41caca8f6568c1186c00477dd407efcd8322ff818139590537ec1e"
     },
     {
-      "path": "requirements.txt",
+      "file": "requirements.txt",
       "bytes": 278,
       "sha256": "e55c853979e907c81fbc78b7ee5061d6016f5b9d8914a7ad90b38be973b89429"
     },
     {
-      "path": "utils/__init__.py",
-      "bytes": 75,
-      "sha256": "6fb1aa3293b19f1d60be71f280234b27ff0c8f1a6a3449325f291193c95b3383"
+      "file": "results/README.txt",
+      "bytes": 828,
+      "sha256": "0db0c7ee8069b62f2780676d798251e838a354ef657ebd920ed88fb2b926454d"
     },
     {
-      "path": "utils/recourse_baselines.py",
+      "file": "shared_training_validation.json",
+      "bytes": 2561,
+      "sha256": "5e1b31abd5dbdcba24eb5f5b821b3e7466abb182ceb7b8f6f8b8fc1e25a5128a"
+    },
+    {
+      "file": "utils/__init__.py",
+      "bytes": 75,
+      "sha256": "8909cae6e89d5a92cdb03f23e525a856975039531e6620806627e417092f2734"
+    },
+    {
+      "file": "utils/recourse_baselines.py",
       "bytes": 19831,
       "sha256": "242aa167a25389a5e9eba193dee9595886c88f1cf51eec07ec440f6939d238da"
     },
     {
-      "path": "utils/recourse_campaign.py",
-      "bytes": 19916,
-      "sha256": "b92698170fb30ac0604734a3f459b2f374e42b36f27ab85f079804cc80b3a9c1"
+      "file": "utils/recourse_campaign.py",
+      "bytes": 20338,
+      "sha256": "f77833052f6180f7b3da4be594b6f4aaf9a90ea721bb3684c83d2c4f83c72699"
     },
     {
-      "path": "utils/recourse_convergence.py",
-      "bytes": 23187,
-      "sha256": "af8d6e5936e341050c44f6796d337209d9bfc00cf2451ca2615a262e6fed7a38"
+      "file": "utils/recourse_convergence.py",
+      "bytes": 23533,
+      "sha256": "3c7281ecb9c3f830074d5622f1ced37d3f2a642ddf62428d0f5be4d299294ca4"
     },
     {
-      "path": "utils/recourse_core.py",
-      "bytes": 34956,
-      "sha256": "a2103cb8c63f211bdb446989494a5c75a90bb36a4beb1c3af36020175c0bb905"
+      "file": "utils/recourse_core.py",
+      "bytes": 39951,
+      "sha256": "850a924f78aec6984998c9ecd00fede548d1e1b93fef5c29cd47b88bc2dd18c7"
     },
     {
-      "path": "utils/recourse_experiments.py",
-      "bytes": 38147,
-      "sha256": "5109d26415dc05e49ae5d486aaf1f4f08ef95353041c5961b9b3d7a54350aa96"
+      "file": "utils/recourse_diversity.py",
+      "bytes": 14933,
+      "sha256": "6946434ee00dee6b66cb95b11193c7020d32a601f6c7691bead9e5319c3bef95"
     },
     {
-      "path": "utils/recourse_multiplicity.py",
-      "bytes": 30306,
-      "sha256": "33c92791ae6199a0ceb3e1be11c8c723810dfd77030f402c9f208b1e2a4f6303"
+      "file": "utils/recourse_diversity_study.py",
+      "bytes": 17369,
+      "sha256": "859a08d531787310140026c983ab0db3f7c9370a72783bd9d5efd4edcd3ddaf7"
     },
     {
-      "path": "utils/recourse_reporting.py",
-      "bytes": 11484,
-      "sha256": "e81042a74895b36cb5fec81639f7321bdacdbf4574f14048b3383f7e55157cf7"
+      "file": "utils/recourse_duality.py",
+      "bytes": 14933,
+      "sha256": "d0fcc25c14d75b7ded24fe9cb3c15df86cfe3eea9f95885736d1b9cd3be6376d"
     },
     {
-      "path": "utils/recourse_results.py",
-      "bytes": 25119,
-      "sha256": "516c4aa9075cdb7a0706b2478a20dacc6162a8c66c6ae70a3a21bb43657d8b97"
+      "file": "utils/recourse_experiments.py",
+      "bytes": 33670,
+      "sha256": "5934884e14e03a1b96e406609c535e57ad3aaec3e8a57ae1a7863ac290fbd2ba"
     },
     {
-      "path": "utils/recourse_runtime.py",
-      "bytes": 6984,
-      "sha256": "616ad5a0e552c3934e9057609b1eb01c2109bb95d30c9fac9087dd9bb7e6a409"
+      "file": "utils/recourse_gmc_mixed.py",
+      "bytes": 13057,
+      "sha256": "4a43d4c610151c37130c212be7d71057ca80b54024d92ce648efcce662d75a13"
     },
     {
-      "path": "utils/recourse_statistics.py",
+      "file": "utils/recourse_gmc_report.py",
+      "bytes": 6636,
+      "sha256": "8912b5455bd2f8b56088b5c21ce76955b5743d025423331282d46e07d0aefc92"
+    },
+    {
+      "file": "utils/recourse_gmc_treediversity.py",
+      "bytes": 4948,
+      "sha256": "221f2d7bd1e5a01e81e6f6a3488dbc620518243c4225bf47054d3bf8ab551abe"
+    },
+    {
+      "file": "utils/recourse_hour_analysis.py",
+      "bytes": 10468,
+      "sha256": "44aa595ef930f87f99910e672d6dca40f422bbee5da4a4fefbf03025d76fa3a8"
+    },
+    {
+      "file": "utils/recourse_multiplicity.py",
+      "bytes": 30979,
+      "sha256": "f8010a132d034ba84f491ee3a6c10d72f5d3fe4af4e51b710d2c71ab1ef55b69"
+    },
+    {
+      "file": "utils/recourse_reporting.py",
+      "bytes": 11476,
+      "sha256": "e30b594aa248a4c1a6685334377f08dfdeb61c904cdbf393863d48a688d7c139"
+    },
+    {
+      "file": "utils/recourse_results.py",
+      "bytes": 25646,
+      "sha256": "1563fdfb68e625326a67f09543e63ed7d38a3be9027ea5bb90864ee5ae00998d"
+    },
+    {
+      "file": "utils/recourse_rounds_study.py",
+      "bytes": 36816,
+      "sha256": "8607684375a4d8e822778fc457e09abb84ec9328e5dafc28c16e17e34b83165f"
+    },
+    {
+      "file": "utils/recourse_runtime.py",
+      "bytes": 8184,
+      "sha256": "ddc4e61fe7abee94f6f8932a01074b999a2c1e8090d2630846530d7ef7cf44a1"
+    },
+    {
+      "file": "utils/recourse_statistics.py",
       "bytes": 10718,
       "sha256": "3f82e7106113564872efec571cffea2e727be89bad7137c036d6f53d08a42788"
     },
     {
-      "path": "utils/recourse_tree_experiments.py",
-      "bytes": 29181,
-      "sha256": "cdccf43ed27c17171208a075aa7315ce12e9f310280af3ac915c3c36189e39c3"
+      "file": "utils/recourse_training.py",
+      "bytes": 11339,
+      "sha256": "48cbd2047d3996de8ce1d3b306f580a7a7b3fed31a4900bcbbc36b65caa136fe"
     },
     {
-      "path": "utils/recourse_trees.py",
-      "bytes": 36016,
-      "sha256": "affe48c4816433bd2e0efe389953c80ac783b3da5a2004b0ecb3ac0ef675f2e4"
+      "file": "utils/recourse_tree_experiments.py",
+      "bytes": 29260,
+      "sha256": "1e42e4e31eda358b6d732a62bcf1bdc1c8310c972a379d6543daddd9ba798266"
     },
     {
-      "path": "utils/tests/test_protocols.py",
-      "bytes": 9082,
-      "sha256": "de1a9217639a15b86330f2e66ae341b8094cbe09264dd731ff207becbcb9ac78"
+      "file": "utils/recourse_trees.py",
+      "bytes": 35914,
+      "sha256": "451a8c6c8023339a6ffadb8231a40865e00fc6907ef07ff216de6094d114ef90"
     },
     {
-      "path": "validation.json",
-      "bytes": 3068,
-      "sha256": "5481b5a7361924a9a4b5aad6aeecc2f0f0320a5a728f35c22068ae541fdfa8d5"
+      "file": "utils/tests/test_compas_constraints.py",
+      "bytes": 3328,
+      "sha256": "ee39d44a8210a3aee0d07ccf1fd567336608f7ded602057b908939e310b7ab97"
+    },
+    {
+      "file": "utils/tests/test_diversity.py",
+      "bytes": 5628,
+      "sha256": "dc562371972e7928fd49094afa9b40ea6c09aa9627483edfc640c7bedf63236c"
+    },
+    {
+      "file": "utils/tests/test_gmc.py",
+      "bytes": 3260,
+      "sha256": "86e5a5e42f6a36fc475a26cfc4ef8407396b536d24c31b33c9db26d1b09dd8c5"
+    },
+    {
+      "file": "utils/tests/test_protocols.py",
+      "bytes": 9597,
+      "sha256": "3a5970f591f225b4221beb5364ff31d19b9b85dbd9f9e120105d5c6a34cbf580"
+    },
+    {
+      "file": "utils/tests/test_rounds_study.py",
+      "bytes": 3971,
+      "sha256": "e8b1bedf7dc66d728fefa590d26a51ee489d0902ecdddd20c4f844e5aacbd998"
+    },
+    {
+      "file": "utils/tests/test_training.py",
+      "bytes": 6071,
+      "sha256": "ea1094497b65add6940b235108b41515580f5ce1bc879111ab8a0fc9129e1e03"
+    },
+    {
+      "file": "utils/tests/test_v7_selection.py",
+      "bytes": 9252,
+      "sha256": "9532b0a05cf2862605cf01073a930c36ebda00cb93b59876d2e25dbf900d9ae0"
+    },
+    {
+      "file": "validation.json",
+      "bytes": 3560,
+      "sha256": "141dce0ffe2ed7f3817014d03ecbf8d683e90663f84d08b6e94fa14e577f3146"
+    },
+    {
+      "file": "workspace_locations.json",
+      "bytes": 281,
+      "sha256": "9c45bcbc11a8415ba5bd3bbba5e3afb21081cc7386448845ba9872c1bf4c58e5"
     }
   ],
-  "utility_source_sha256_before_packaging": {
-    "recourse_statistics.py": "3f82e7106113564872efec571cffea2e727be89bad7137c036d6f53d08a42788",
-    "recourse_results.py": "48344779a7d40e9ab49d5639eb385194688c4bbc02f7df1969a01f1db5b830a8",
-    "recourse_trees.py": "713d09b0e2050279b7a5d47fc6aaefcd08b8731d1cde774275f8726062e2443a",
-    "recourse_convergence.py": "43474756a2aa0c1cfe01f49a20d3ee79dde2f88e27ac81861c059f0a7bdcd0fc",
-    "recourse_multiplicity.py": "e6fdd5ab7e5c3c5ef0e1cea5617ced2520214ca1a610bf6e4db07f81ba0deeba",
-    "recourse_reporting.py": "ae43ac6edb06eee98b7b4cf38a1c6acb874dac7e2ed559587a1a542152afd2fb",
-    "recourse_campaign.py": "18f4043f5d1988dc6308cf305ab77cb5aea196f257f035d4a76e8b1c320592ee",
-    "recourse_experiments.py": "7216b1579f5e38e4dcf81dc018043b4375f860918fcdb557d2aa027580ac5eed",
-    "recourse_baselines.py": "7e3be4885a232731e997606d1fcb7f8dffbb4af83b4e0e1d38ca7f7bc7fe6a5a",
-    "recourse_tree_experiments.py": "4c71cd26c52f5a4be1179ac384705ade12249e49f08199557f8041d25bc5d8c7",
-    "recourse_core.py": "2597fc17f34267e9a9e985749b1c58a5d34ea152fb865c4eba4e451dca79bc38"
-  }
+  "updated_at_utc": "20261012T135249Z",
+  "training_protocol": "checked_classifier_training_v2",
+  "latest_validation": "shared_training_validation.json"
 }
