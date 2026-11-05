@@ -47,7 +47,9 @@ def start_notebook_experiment(name, Quick=True, seed=42, *, settings_factory=Non
     if RESULTS_ROOT is None:
         raise RuntimeError('Run configure_notebook(version, results_root) in setup first.')
     settings = (settings_factory or experiment_settings)(Quick, seed)
-    rc.RESULTS_DIR = RESULTS_ROOT / NOTEBOOK_VERSION / settings['mode'] / _safe(name) / _stamp()
+    condition = 'diversity_on' if settings.get('diversity') else 'diversity_off'
+    selection = rc.candidate_selection_mode(settings.get('candidate_selection'))
+    rc.RESULTS_DIR = RESULTS_ROOT / NOTEBOOK_VERSION / settings['mode'] / selection / condition / _safe(name) / _stamp()
     rc.RESULTS_DIR.mkdir(parents=True, exist_ok=False)
     atomic_json(rc.RESULTS_DIR / 'session.json', {
         'notebook_version': NOTEBOOK_VERSION, 'experiment': name, **settings})
@@ -214,7 +216,11 @@ def load_models(seed_directory):
             model = rc.FeatureMaskedModel(model, desc['feature_mask'])
         with np.load(directory/f'model_{i:04d}.npz', allow_pickle=False) as saved:
             state = {k: torch.tensor(saved[k]) for k in saved.files}
-        model.load_state_dict(state); model.eval(); result.append(model)
+        model.load_state_dict(state); model.eval()
+        model.training_settings = desc.get('training_settings', {})
+        model.training_loss_history = desc.get('training_loss', [])
+        model.training_artifact = desc.get('training_artifact')
+        result.append(model)
     return result
 
 
@@ -247,8 +253,7 @@ class RunStore:
             except importlib.metadata.PackageNotFoundError:
                 self.manifest['packages'][package] = None
         source_dir = Path(__file__).resolve().parent
-        for filename in ['recourse_core.py', 'recourse_baselines.py', 'recourse_experiments.py', 'recourse_results.py',
-                         'recourse_trees.py', 'recourse_tree_experiments.py', 'recourse_statistics.py', 'recourse_reporting.py', 'recourse_campaign.py', 'recourse_convergence.py', 'recourse_multiplicity.py', 'recourse_runtime.py', '__init__.py']:
+        for filename in sorted({p.name for p in source_dir.glob('recourse_*.py')} | {'__init__.py'}):
             source = source_dir/filename
             if source.exists():
                 data = source.read_bytes()
@@ -300,7 +305,7 @@ class RunStore:
             'mean': ctx.scaler.mean_, 'scale': ctx.scaler.scale_, 'variance': ctx.scaler.var_,
             'training_samples_seen': ctx.scaler.n_samples_seen_,
             'actionable_indices': ctx.actionable_indices, 'actionability_policy': ctx.actionability_policy,
-            'epsilon': ctx.epsilon, 'seed': ctx.seed, **extra})
+            'epsilon': ctx.epsilon, 'seed': ctx.seed, 'candidate_selection': ctx.candidate_selection, **extra})
         for i, model in enumerate(models):
             _npz(directory/f'model_{i:04d}.npz', {k: v.detach().cpu().numpy() for k, v in model.state_dict().items()})
         atomic_json(directory/'models.json', {'models': [_descriptor(m) for m in models],
@@ -317,7 +322,8 @@ class RunStore:
         atomic_json(directory/'preprocessing.json', {'feature_names': ctx.columns, 'dataset': ctx.name,
             'mean': ctx.scaler.mean_, 'scale': ctx.scaler.scale_, 'variance': ctx.scaler.var_,
             'training_samples_seen': ctx.scaler.n_samples_seen_, 'seed': ctx.seed,
-            'actionable_indices': ctx.actionable_indices, 'actionability_policy': ctx.actionability_policy})
+            'actionable_indices': ctx.actionable_indices, 'actionability_policy': ctx.actionability_policy,
+            'candidate_selection': ctx.candidate_selection})
         self.event('split_prepared', seed=ctx.seed, artifact=str(directory.relative_to(self.path)))
 
     def save_arrays(self, relative_path, **arrays):
@@ -327,6 +333,7 @@ class RunStore:
     def commit(self, record, point=None, models=None, x0=None, constraints=None):
         from . import recourse_core as rc
         row = dict(record, run_id=self.path.name)
+        row.setdefault('candidate_selection', self.manifest['configuration'].get('candidate_selection', 'reference'))
         if point is not None:
             directory = self.path/f"seed_{row['seed']}_fold_{row['fold']}"/f"instance_{row['instance_id']}"/_safe(row.get('artifact_key', row['method']))
             directory.mkdir(parents=True, exist_ok=True)
@@ -441,6 +448,8 @@ def experiment(function=None, *, settings_factory=None):
                 result['Mode'] = settings['mode']
                 result['Profile Revision'] = settings.get('profile_revision','legacy')
                 result['Notebook Version'] = NOTEBOOK_VERSION
+                result['Diversity'] = bool(settings.get('diversity',False))
+                result['Candidate Selection'] = settings.get('candidate_selection', 'reference')
                 if 'tree_profile' in settings:
                     result['Tree Profile'] = settings['tree_profile']
                 if 'T' not in result:

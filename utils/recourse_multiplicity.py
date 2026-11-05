@@ -20,7 +20,7 @@ from . import recourse_statistics as rs
 from . import recourse_reporting as rp
 from . import recourse_convergence as rg
 
-REVISION='v6-multiplicity-burden-v1'
+REVISION='v7-multiplicity-burden-v1'
 PROFILES={
     'quick':dict(pgd_steps=40,pgd_restarts=2,step_fraction=.1,tree_time_limit=.5),
     'intermediate':dict(pgd_steps=200,pgd_restarts=3,step_fraction=.1,tree_time_limit=1.),
@@ -47,7 +47,8 @@ def settings(Quick=True):
                 cohort='all saved source factuals and seeds; no mode-based subsampling')
 
 
-def find_saved_tradeoffs(results_root, version='v6', mode='quick', sections=('cost_validity',)):
+def find_saved_tradeoffs(results_root, version='V7', mode='quick', sections=('cost_validity',),
+                        candidate_selection='majority',diversity=True):
     """Select the latest saved campaign per explicit version/mode/section.
 
 Only one level is inspected, never a recursive scan of model/event files.
@@ -56,7 +57,10 @@ The selected paths are printed and recorded. No cross-version auto-fallback.
     paths=[]
     for section in sections:
         if section not in {'cost_validity','tree_tradeoff'}:raise ValueError('Expected a trade-off section')
-        root=Path(results_root)/version/str(mode)/section
+        root=Path(results_root)/version/str(mode)
+        if version=='V7':
+            root=root/rc.candidate_selection_mode(candidate_selection)/('diversity_on' if diversity else 'diversity_off')
+        root=root/section
         candidates=sorted(root.glob('*/all_results.csv')) if root.exists() else []
         if candidates:paths.append(candidates[-1].parent)
     if not paths:raise FileNotFoundError(f'No saved trade-offs for {version}/{mode}/{sections}')
@@ -357,7 +361,11 @@ queries only when model weights, factual, budget, constraints and options match.
     print('Loading and validating saved models, factuals, and constraints...',flush=True)
     jobs=prepare_sources(sources,datasets,verbose=True)
     root=Path(results_root or rr.RESULTS_ROOT or (rc.PROJECT_ROOT/'results')).resolve()
-    base=root/rr.NOTEBOOK_VERSION/options['mode']/'multiplicity_burden';base.mkdir(parents=True,exist_ok=True)
+    source_selections={j['manifest']['configuration'].get('candidate_selection','reference') for j in jobs}
+    if len(source_selections)!=1:
+        raise ValueError('Analyze reference and majority source cohorts in separate burden calls.')
+    source_selection=next(iter(source_selections))
+    base=root/rr.NOTEBOOK_VERSION/options['mode']/source_selection/'multiplicity_burden';base.mkdir(parents=True,exist_ok=True)
     codes={name:_file_hash(Path(__file__).parent/name) for name in
            ['recourse_multiplicity.py','recourse_core.py','recourse_trees.py','recourse_convergence.py',
             'recourse_statistics.py','recourse_reporting.py','recourse_results.py']}
@@ -365,7 +373,7 @@ queries only when model weights, factual, budget, constraints and options match.
     for name in ['torch','numpy','scipy','gurobipy','scikit-learn']:
         try:versions[name]=importlib.metadata.version(name)
         except importlib.metadata.PackageNotFoundError:versions[name]=None
-    protocol=dict(revision=REVISION,options=options,sources=[dict(path=str(j['path']),fingerprint=j['fingerprint']) for j in jobs],
+    protocol=dict(revision=REVISION,options=options,candidate_selection=source_selection,sources=[dict(path=str(j['path']),fingerprint=j['fingerprint']) for j in jobs],
         source_code=codes,packages=versions,threshold=.5,joint_method='saved ORPM / ORPM-tree',
         warm_witness='Already-favorable factuals and verified saved joint points prove singleton attainability; no search needed.',
         interpretation='Achieved-search burden; NN failure or tree timeout does not prove infeasibility.',
@@ -470,6 +478,7 @@ queries only when model weights, factual, budget, constraints and options match.
     rr.atomic_json(out/'burden_manifest.json',dict(protocol,fingerprint=fingerprint,
         status='completed_with_errors' if errors else 'completed',evaluations=len(records),new_searches=solves,
         cache_hits=hits,known_valid_witnesses=witnesses,errors=len(errors),elapsed_seconds=time.perf_counter()-started))
-    summary.attrs.update(campaign_directory=str(out),search_errors=errors)
+    summary['Candidate Selection']=source_selection
+    summary.attrs.update(campaign_directory=str(out),search_errors=errors,candidate_selection=source_selection)
     print(f'Completed: {solves} new searches, {hits} cache hits, {witnesses} known-valid witnesses. Saved {out}',flush=True)
     return summary

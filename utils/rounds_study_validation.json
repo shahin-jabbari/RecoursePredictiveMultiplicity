@@ -1,0 +1,46 @@
+{
+  "status": "passed",
+  "validated_at_utc": "2026-10-08T00:57:39.374946+00:00",
+  "unit_tests": 48,
+  "new_rounds_specific_unit_tests": 6,
+  "bounded_end_to_end": {
+    "trajectories": 8,
+    "families": [
+      "convex_logistic",
+      "mixed_logistic"
+    ],
+    "model_counts": [
+      3,
+      6
+    ],
+    "budgets": [
+      0.5,
+      2.0
+    ],
+    "seeds": [
+      42
+    ],
+    "individuals": 1,
+    "max_rounds": 8,
+    "checkpoints": 40,
+    "threshold_outcomes": 24,
+    "resume": "passed",
+    "saved_models_and_paired_cohorts": "passed",
+    "fixed_normalizer_across_counts_and_budgets": "passed",
+    "ordinary_V7_globals_preserved": true
+  },
+  "actual_convex_200_round_check": {
+    "status": "passed",
+    "checkpoints": 41,
+    "all_bounds_below_regret_upper_bound": true
+  },
+  "notebooks": {
+    "schema_and_syntax": "passed",
+    "empty_outputs": true,
+    "setup_and_controls_in_loaded_V7_kernel": "passed"
+  },
+  "execution_lock": "passed",
+  "visual_check": "passed",
+  "full_default_study_launched": false,
+  "notes": "End-to-end checks reduced training and solver effort in their validation process only. Delivered defaults use 200 rounds in every mode. Existing ordinary V7 ORPM solvers were not modified."
+}

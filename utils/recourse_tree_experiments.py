@@ -130,7 +130,8 @@ def run_tree_experiment(dataset_name,dataset_data,family='decision_tree',kind='c
     actionable=dataset_data[2] if len(dataset_data)>2 else None
     records=[]; convergence=[]; gap_records=[]
     rr.atomic_json(run.path/'tree_protocol.json',{
-        'model_selection':'train only; admit using validation; held-out factuals from deployed-model rejection',
+        'model_selection':'train only; admit using validation; held-out factuals use configured rejection rule',
+        'candidate_selection':settings.get('candidate_selection','reference'),
         'unseen_models':'separate model seeds; never queried by recourse optimizers',
         'budget_pairing':'one model set and factual set per seed reused across every budget/method',
         'training_scope':'same training sample; randomized tree/forest fitting',

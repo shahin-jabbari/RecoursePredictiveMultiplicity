@@ -15,6 +15,7 @@ from . import recourse_campaign as campaign
 from . import recourse_results as rr
 from . import recourse_reporting as rp
 from . import recourse_multiplicity as burden
+from . import recourse_training as training
 
 _THREAD_LIMIT = None
 _RUN_INDEX = []
@@ -47,7 +48,7 @@ def solver_check(require_full_size=False):
         import gurobipy as gp
         with gp.Env(empty=True) as env:
             env.setParam('OutputFlag',0);env.start()
-            with gp.Model('v6_preflight',env=env) as model:
+            with gp.Model('v7_preflight',env=env) as model:
                 count=201 if require_full_size else 2
                 x=model.addVars(count,lb=0,ub=1)
                 model.addConstr(x[0]>=.5)
@@ -59,18 +60,29 @@ def solver_check(require_full_size=False):
                     full_size_probe=require_full_size)
     except Exception as exc:
         raise RuntimeError('Gurobi preflight failed. Install gurobipy and configure a suitable license. '
-            'Intermediate/full tree profiles and the neural MIQCP reference need a full-size license. '
-            'For a non-tree-only run, set RUN_TREES=False and INCLUDE_NEURAL_MIQCP=False. '
+            'Mixed neural gap diagnostics (including quick mode), intermediate/full tree profiles, '
+            'and the neural MIQCP reference need a full-size license. '
+            'To run without Gurobi, set RUN_TREES=False, RUN_MIXED_GAP=False, '
+            'and INCLUDE_NEURAL_MIQCP=False. '
             f'Original error: {exc}') from exc
 
 
-def initialize(mode='quick',seed=42,run_trees=True,include_neural_miqcp=None,root=None):
+def initialize(mode='quick',seed=42,run_trees=True,include_neural_miqcp=None,root=None,
+               diversity=True,diversity_options=None,candidate_selection='majority',run_mixed_gap=True):
     global _THREAD_LIMIT
     expected=rc.PROJECT_ROOT.resolve()
     if root is not None and Path(root).resolve()!=expected:
         raise RuntimeError('The imported utils package belongs to a different folder. Restart the '
-                           'kernel and open this V6 notebook from its extracted directory.')
+                           'kernel and open this V7 notebook from its extracted directory.')
     name=campaign.mode_name(mode)
+    if type(diversity) is not bool:
+        raise TypeError('diversity must be True or False.')
+    campaign.CANDIDATE_SELECTION=rc.candidate_selection_mode(candidate_selection)
+    campaign.DIVERSITY_ENABLED=diversity
+    if diversity_options is not None:
+        unknown=set(diversity_options)-set(campaign.DIVERSITY_OPTIONS)
+        if unknown:raise ValueError(f'Unknown diversity options: {sorted(unknown)}')
+        campaign.DIVERSITY_OPTIONS.update(diversity_options)
     torch.set_num_threads(1)
     try:torch.set_num_interop_threads(1)
     except RuntimeError:pass
@@ -79,18 +91,23 @@ def initialize(mode='quick',seed=42,run_trees=True,include_neural_miqcp=None,roo
         campaign.PROFILES[name]['include_miqcp']=bool(include_neural_miqcp)
     include_miqcp=campaign.PROFILES[name]['include_miqcp']
     inventory=dataset_inventory()
-    solver=solver_check(require_full_size=(name!='quick' or include_miqcp)) if run_trees or include_miqcp else {'available':'not requested'}
-    session=rr.configure_notebook('v6',expected/'results')
+    solver=solver_check(require_full_size=(name!='quick' or include_miqcp or run_mixed_gap)) if run_trees or include_miqcp or run_mixed_gap else {'available':'not requested'}
+    session=rr.configure_notebook('V7',expected/'results')
     versions={p:importlib.metadata.version(p) for p in
               ['numpy','pandas','scipy','torch','scikit-learn','matplotlib','lime']}
     rr.atomic_json(session/'environment.json',dict(mode=name,seed=seed,packages=versions,
         solver=solver,run_trees=run_trees,include_neural_miqcp=include_miqcp,
+        diversity=diversity,candidate_selection=campaign.CANDIDATE_SELECTION,run_mixed_gap=run_mixed_gap,
+        training_protocol=training.PROTOCOL,training_options=dict(training.DEFAULTS),
+        diversity_options=dict(campaign.DIVERSITY_OPTIONS),
         dataset_inventory=inventory.to_dict('records'),
         dataset_manifest=json.loads((expected/'dataset'/'manifest.json').read_text())))
     _RUN_INDEX.clear()
-    print(f'V6 / {name}; outputs: {expected / "results" / "v6" / name}',flush=True)
-    print('All six datasets are local. German/Polish retain the recorded targets for numerical '
-          'replication and carry target-audit flags; see dataset/README.txt.',flush=True)
+    print(f'V7 / {name} / {campaign.CANDIDATE_SELECTION} / diversity={diversity}; outputs: {expected / "results" / "V7" / name}',flush=True)
+    print('All six datasets are local. German class 1 now represents good credit (raw y=0). '
+          'Polish retains its target-audit flag; see dataset/README.txt.',flush=True)
+    print('Classifier training:', training.PROTOCOL,
+          '(logistic objective bound; empirical neural checks, no neural global-optimum guarantee)')
     print('Neural MIQCP reference:', 'enabled' if include_miqcp else 'disabled for this run')
     return inventory,campaign.workload_plan(mode,seed)
 
@@ -102,9 +119,6 @@ def run_section(section,mode='quick',seed=42,resume=True,show=True):
         raise RuntimeError(f'{section} produced no summary rows; inspect its saved diagnostics.')
     if 'Model Generation Failures' in result and (result['Model Generation Failures']>0).any():
         raise RuntimeError(f'{section} has model-generation failures; results were saved for inspection.')
-    if section=='convergence':
-        rp.plot_convergence(result.attrs.get('trajectories',[]),
-                            result.attrs['campaign_directory'],show=show)
     _record_section(section,mode,result,time.perf_counter()-started)
     return result
 
@@ -122,16 +136,16 @@ def run_burden(source,mode='quick',resume=True,show=True,name='multiplicity_burd
 
 
 def _record_section(section,mode,result,elapsed):
-    _RUN_INDEX.append(dict(section=section,mode=campaign.mode_name(mode),elapsed_seconds=elapsed,
+    _RUN_INDEX.append(dict(section=section,mode=campaign.mode_name(mode),candidate_selection=campaign.CANDIDATE_SELECTION,elapsed_seconds=elapsed,
         summary_rows=len(result),directory=result.attrs.get('campaign_directory')))
-    rr.atomic_json(rc.PROJECT_ROOT/'results'/'v6'/'latest_notebook_index.json',_RUN_INDEX)
+    rr.atomic_json(Path(rr.RESULTS_ROOT)/rr.NOTEBOOK_VERSION/'latest_notebook_index.json',_RUN_INDEX)
 
 
 def compact_summary(frame):
     if frame is None:return pd.DataFrame()
-    keys=['Dataset','Family','Aggregation','Method','Config','Budget','Actual Models','Mode']
+    keys=['Dataset','Family','Aggregation','Method','Config','Budget','Actual Models','Mode','Candidate Selection']
     columns=[c for c in keys if c in frame]
-    columns += [c for c in frame if c.endswith('Validity Mean') or c.endswith('Failure Count')]
+    columns += [c for c in frame if c.endswith('Validity Mean') or c.endswith('Failure Count') or c.startswith(('Gap Lower Bound','Gap Upper Bound','Randomized Gap'))]
     if not columns:return frame
     return frame[columns]
 

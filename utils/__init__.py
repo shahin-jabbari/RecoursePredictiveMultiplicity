@@ -1,1 +1,1 @@
-"""Utilities for the RecourseModelMultiplicity V6 replication notebook."""
+"""Utilities for the RecourseModelMultiplicity V7 replication notebook."""

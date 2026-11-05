@@ -83,7 +83,8 @@ The lower bound follows from convexity, not the optimizer's success flag.
 The common normalization gives losses in [0,1] on the whole feasible ball.
 The feasible domain is the continuous box/L2/immutable-feature relaxation.
 """
-    def __init__(self, models, x0, budget, constraints=None, maxiter=200, ftol=1e-10):
+    def __init__(self, models, x0, budget, constraints=None, maxiter=200, ftol=1e-10,
+                 normalizer=None):
         if not models or not all(rc.is_linear(m) for m in models):
             raise ValueError('Convex benchmark requires affine-logit models')
         if not np.isfinite(budget) or budget < 0 or maxiter < 1:
@@ -102,6 +103,10 @@ The feasible domain is the continuous box/L2/immutable-feature relaxation.
         self.b = np.array([float(b.detach().cpu()) for _, b in params])
         self.normalizer = max(float(np.logaddexp(0., -self.A@self.origin-self.b+
                                      budget*np.linalg.norm(self.A, axis=1)).max()), 1e-15)
+        if normalizer is not None:
+            if not np.isfinite(normalizer) or normalizer < self.normalizer:
+                raise ValueError('A shared normalizer must be finite and at least the set-specific loss bound.')
+            self.normalizer = float(normalizer)
 
     def losses(self, x):
         return np.logaddexp(0., -self.A@np.asarray(x)-self.b)/self.normalizer
@@ -149,9 +154,9 @@ The feasible domain is the continuous box/L2/immutable-feature relaxation.
 
 
 def convex_trajectory(models, x0, budget, T=25, every=5, constraints=None,
-                      maxiter=200, on_row=None):
+                      maxiter=200, on_row=None, normalizer=None):
     """The paper's averaged-point gap, with a distinct evaluation solve at wbar."""
-    oracle = ConvexLogitOracle(models, x0, budget, constraints, maxiter)
+    oracle = ConvexLogitOracle(models, x0, budget, constraints, maxiter, normalizer=normalizer)
     selected = set(checkpoints(T, every))
     n = len(models); eta = np.sqrt(np.log(n)/T)
     logw = np.full(n, -np.log(n)); xsum = np.zeros_like(oracle.origin)

@@ -287,9 +287,11 @@ def run_generalization_experiment(dataset_name, dataset, num_opt_models=5, num_e
             continue
         opt = rc.ModelSet(models[:num_opt_models], context=copy.copy(models.context))
         unseen = rc.ModelSet(models[num_opt_models:], context=copy.copy(models.context))
-        # Eligibility depends only on the deployed optimization model, never unseen models.
+        # Eligibility uses the selected rule on optimization models, never unseen models.
         candidates = rc.select_candidates(opt, max_instances)
         models.context.candidate_ids = opt.context.candidate_ids
+        models.context.candidate_selection = dict(opt.context.candidate_selection)
+        models.metadata['candidate_selection'] = dict(opt.context.candidate_selection)
         _save_seed(models, candidates, fold, seed+fold,
             optimization_model_indices=list(range(num_opt_models)),
             evaluation_model_indices=list(range(num_opt_models, len(models))))
@@ -394,82 +396,6 @@ def _select_accuracy_window(pool, requested, tolerance):
     return best[1]
 
 
-@rr.experiment(settings_factory=lambda mode, seed: campaign.profile_settings(mode,seed,'convergence'))
-def run_convergence_experiment(dataset_name, dataset, num_linear=1, num_nn_single_layer=1,
-        num_nn_double_layer=1, recourse_budget=2.0, actionable_indices=None,
-        folds=2, max_instances=20, seed=42, T=50):
-    """MSE objective trajectories, with the same mode and persistence as comparisons."""
-    baseline_T = T
-    T = rr.orpm_rounds(T,kind='convergence')
-    rr.record_iteration_limits(T,baseline_T)
-    X, y = dataset
-    X = rc._frame(X, dataset_name)
-    records, trajectories, trajectory_seeds = [], [], []
-    counts = (num_linear, num_nn_single_layer, num_nn_double_layer)
-    for fold in range(folds):
-        print(f'{dataset_name}: seed {seed+fold} ({fold+1}/{folds}); preparing models', flush=True)
-        rr.set_scope(fold=fold, seed=seed+fold)
-        try:
-            models, candidates = rc.train_and_select_candidates_diverse(X, y, *counts,
-                max_instances=max_instances, seed=seed+fold, actionable_indices=actionable_indices,
-                dataset_name=dataset_name)
-        except Exception as exc:
-            records.append(_commit({'method': 'ORPM', 'fold': fold, 'seed': seed+fold,
-                'status': 'model_generation_failed', 'error': f'{type(exc).__name__}: {exc}'}))
-            continue
-        _save_seed(models, candidates, fold, seed+fold)
-        for position, x0 in enumerate(candidates):
-            print(f'{dataset_name}: seed {seed+fold}, factual {position+1}/{len(candidates)}, budget {recourse_budget:g}', flush=True)
-            rr.set_scope(fold=fold, seed=seed+fold, instance_id=models.context.candidate_ids[position], method='ORPM')
-            c = rc.constraints_for(models, x0)
-            started = time.perf_counter()
-            try:
-                point, wbar, history, _, _ = rc.solve_robust_recourse_with_oracle(x0, models,
-                    recourse_budget, rc.recourse_loss, rc.oracle_gradient_descent, T=T, B=1)
-                elapsed = time.perf_counter()-started
-                curve = [max(rc.recourse_loss(m, x).item() for m in models) for x in history]
-                trajectories.append(curve)
-                trajectory_seeds.append(seed+fold)
-            except Exception as exc:
-                elapsed = time.perf_counter()-started
-                point = rc._tag(x0.clone(), status='solver_error', error=f'{type(exc).__name__}: {exc}')
-            row = _record('ORPM', point, models, x0, recourse_budget, c, elapsed,
-                dataset=dataset_name, fold=fold, seed=seed+fold, instance_id=models.context.candidate_ids[position],
-                actual_models=len(models), requested_counts=counts, budget=recourse_budget, T=T,
-                measurement='maximum_probability_MSE_nonconvex_heuristic')
-            if point.recourse_info['status'] == 'solver_error': row['valid'] = False
-            records.append(_commit(row, point, models, x0, c))
-    config = f'{sum(counts)} Models ({counts[0]}LR+{counts[1]}NN1+{counts[2]}NN2)'
-    result = _summary(records, ['ORPM'], folds, config)
-    result['Instance Records'] = save_records(records, 'objective_trajectories')
-    result['ORPM T'] = T
-    if trajectories:
-        unique_seeds = sorted(set(trajectory_seeds))
-        matrix = np.asarray(trajectories)
-        seed_means = np.stack([matrix[np.asarray(trajectory_seeds)==seed].mean(axis=0) for seed in unique_seeds])
-        stats = [rs.mean_ci(seed_means[:,j],(0.,1.)) for j in range(T)]
-        curves = pd.DataFrame({'round':np.arange(1,T+1),
-            'mean_max_loss':[v['mean'] for v in stats],'std_max_loss':[v['sd'] for v in stats],
-            'ci95_low':[v['ci_low'] for v in stats],'ci95_high':[v['ci_high'] for v in stats],
-            'ci95_unbounded_low':[v['ci_low_unbounded'] for v in stats],
-            'ci95_unbounded_high':[v['ci_high_unbounded'] for v in stats],
-            'se_max_loss':[v['se'] for v in stats],
-            'n_seeds':[v['n_seeds'] for v in stats],'ci_status':[v['ci_status'] for v in stats]})
-        if rr.current_run():
-            curves.to_csv(rr.current_run().path/'convergence.csv',index=False)
-            pd.DataFrame([{'seed':seed,'round':j+1,'mean_max_loss':float(seed_means[i,j])}
-                          for i,seed in enumerate(unique_seeds) for j in range(T)]).to_csv(
-                              rr.current_run().path/'convergence_seed_means.csv',index=False)
-        result.attrs['trajectory'] = {'dataset':dataset_name,'config':config,'budget':recourse_budget,
-            'mean':curves.mean_max_loss.to_numpy(),'std':curves.std_max_loss.to_numpy(),
-            'ci_low':curves.ci95_low.to_numpy(),'ci_high':curves.ci95_high.to_numpy(),
-            'n_seeds':len(unique_seeds),'ci_status':curves.ci_status.tolist(),
-            'uncertainty':'pointwise 95% seed-t CI; not simultaneous',
-            'individual_trajectories':trajectories,'trajectory_seeds':trajectory_seeds,
-            'seed_means':seed_means}
-    return result
-
-
 def generate_models_with_tolerance(X, y, tolerance, num_linear=1, num_nn_single_layer=1,
         num_nn_double_layer=1, num_selected=3, max_instances=10, seed=42):
     requested = [num_linear, num_nn_single_layer, num_nn_double_layer]
@@ -486,7 +412,12 @@ def generate_models_with_tolerance(X, y, tolerance, num_linear=1, num_nn_single_
         for i in range(3*count):
             model_seed = seed+kind*100+i
             model = factories[kind](model_seed)
-            rc.train_model(model, ctx.X_train, ctx.y_train, epochs=50, lr=0.01, seed=model_seed)
+            from .recourse_training import TrainingCheckError
+            try:
+                rc.train_model(model, ctx.X_train, ctx.y_train, epochs=50, lr=0.01, seed=model_seed)
+            except TrainingCheckError as exc:
+                rr.event('candidate_training_rejected',model_seed=model_seed,training=exc.info)
+                continue
             pool.append({'model': model, 'kind': kind, 'id': kind*100+i,
                          'acc': rc._accuracy(model, ctx.X_validation, ctx.y_validation)})
     selected = _select_accuracy_window(pool, requested, tolerance)
@@ -637,6 +568,8 @@ def oracle_sensitivity(weights, models, x0, budget, configurations, seed=42):
 def compare_compas_actionability(models, candidates, budget, T=100):
     """Appendix A.8 policy: sex fixed, 0 <= age increase <= 5 original years.
 
+    Existing fixed features remain fixed; the age range applies only if age
+    is actionable in the supplied model context.
     Uses the supplied models, candidates, budget and rounds. Does not change
     experiment settings or silently substitute another model configuration.
     """

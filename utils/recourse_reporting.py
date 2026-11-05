@@ -11,7 +11,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from . import recourse_statistics as rs
 
-DATASET_LABELS = {'Synthetic':'Synthetic', 'COMPAS':'COMPAS', 'German':'German [target audit]',
+DATASET_LABELS = {'Synthetic':'Synthetic', 'COMPAS':'COMPAS', 'German':'German Credit',
     'Polish':'Polish [target audit]', 'Folktables':'FolkTables ACS Income',
     'Give_Me_Some_Credit':'Give Me Some Credit'}
 CI_NOTE = 'Pointwise 95% CI across seed means; <5 seeds exploratory.\nUnavailable intervals omitted.'

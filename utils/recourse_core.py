@@ -30,16 +30,18 @@ from . import recourse_results as rr
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RESULTS_DIR = PROJECT_ROOT / 'results'
-# Historical target encodings are retained for numerical replication.
-# German y=1 is bad credit; Polish orientation has not been independently verified.
-FAVORABLE_LABEL = {'Synthetic': 1, 'Polish': 1, 'German': 1, 'COMPAS': 0,
+# Raw dataset labels are converted once in prepare_split so class 1 is favorable.
+# German local y=0 is good credit; local y=1 is bad credit.
+# Polish orientation has not been independently verified.
+FAVORABLE_LABEL = {'Synthetic': 1, 'Polish': 1, 'German': 0, 'COMPAS': 0,
                    'Folktables': 1, 'Give_Me_Some_Credit': 0}
 LABEL_PROVENANCE = {'Polish': 'Recorded target y=1; semantic orientation unverified',
-                    'German': 'Recorded target y=1 is bad credit; historical replication only',
+                    'German': 'Local y=0 (good credit) maps to model class 1; local y=1 (bad credit) maps to class 0',
                     'COMPAS': 'two_year_recid=0 is favorable',
                     'Give_Me_Some_Credit': 'SeriousDlqin2yrs=0 is favorable'}
 SCHEMAS = {}
 RUN_RECORDS = []
+TRAINING_PROTOCOL = 'checked_classifier_training_v2'
 
 
 def canonical_name(name):
@@ -238,14 +240,18 @@ class FeatureMaskedModel(nn.Module):
 _TRAINING_CACHE = {}
 
 
-def train_model(model, X, y, epochs=100, lr=0.01, seed=None):
-    settings = rr._ACTIVE_SETTINGS.get() or {}
-    epochs = int(settings.get('training_epochs', epochs))
+def train_model(model, X, y, epochs=100, lr=0.01, seed=None, *, training_options=None):
+    """Checked classifier fit; epochs/lr control Adam warmup, not acceptance.
+
+    Failed candidates are recorded and raise TrainingCheckError. Logistic fits
+    have a regularized objective-error bound; neural checks are empirical.
+    """
+    from . import recourse_training as training
+    options = training.effective_options(epochs, lr, training_options)
     if seed is not None:
         torch.manual_seed(seed)
-    # Reuse only byte-identical training inputs, initialization and hyperparameters.
-    # Test/validation data and recourse outputs never enter this cache.
-    digest = hashlib.sha256(repr((type(model).__name__, epochs, lr, seed)).encode())
+    digest = hashlib.sha256(json.dumps(dict(protocol=training.PROTOCOL, options=options,
+        model=type(model).__name__, seed=seed), sort_keys=True).encode())
     for array in [np.asarray(X), np.asarray(y)]:
         digest.update(str((array.shape, array.dtype)).encode())
         digest.update(np.ascontiguousarray(array).tobytes())
@@ -253,36 +259,23 @@ def train_model(model, X, y, epochs=100, lr=0.01, seed=None):
         digest.update(key.encode()); digest.update(value.detach().cpu().numpy().tobytes())
     cache_key = digest.hexdigest()
     if cache_key in _TRAINING_CACHE:
-        weights, history = _TRAINING_CACHE[cache_key]
+        weights, history, info = _TRAINING_CACHE[cache_key]
         model.load_state_dict(weights); model.eval()
-        model.training_settings = {'epochs': epochs, 'lr': lr, 'seed': seed, 'cache_hit': True}
         model.training_loss_history = list(history)
-        if rr.current_run(): rr.current_run().save_training(model)
-        return model
-    if seed is not None:
-        torch.manual_seed(seed)
-    optimizer = optim.Adam(model.parameters(), lr=lr)
-    xt = torch.as_tensor(np.asarray(X), dtype=torch.float32)
-    yt = torch.as_tensor(np.asarray(y), dtype=torch.float32).reshape(-1, 1)
-    model.train()
-    loss_history = []
-    for _ in range(epochs):
-        optimizer.zero_grad()
-        # Same BCE training objective, evaluated stably from logits.
-        loss = F.binary_cross_entropy_with_logits(model.logits(xt), yt)
-        loss_history.append(loss.item())
-        loss.backward()
-        optimizer.step()
-    model.eval()
-    model.training_settings = {'epochs': epochs, 'lr': lr, 'seed': seed}
-    with torch.no_grad():
-        loss_history.append(F.binary_cross_entropy_with_logits(model.logits(xt), yt).item())
-    model.training_loss_history = loss_history
-    if len(_TRAINING_CACHE) >= 256:
-        _TRAINING_CACHE.pop(next(iter(_TRAINING_CACHE)))
-    _TRAINING_CACHE[cache_key] = (copy.deepcopy(model.state_dict()), list(loss_history))
+        model.training_settings = copy.deepcopy(info)
+        model.training_settings['cache_hit'] = True
+    else:
+        model, info = training.fit(model, X, y, options)
+        info.update(seed=seed, cache_hit=False)
+        if info['passed']:
+            if len(_TRAINING_CACHE) >= 256:
+                _TRAINING_CACHE.pop(next(iter(_TRAINING_CACHE)))
+            _TRAINING_CACHE[cache_key] = (copy.deepcopy(model.state_dict()),
+                list(model.training_loss_history), copy.deepcopy(info))
     if rr.current_run():
         rr.current_run().save_training(model)
+    if not model.training_settings['passed']:
+        raise training.TrainingCheckError(model.training_settings)
     return model
 
 
@@ -329,6 +322,7 @@ class SplitContext:
     actionable_indices: object = None
     epsilon: float = 0.05
     candidate_ids: list = field(default_factory=list)
+    candidate_selection: dict = field(default_factory=dict)
     actionability_policy: str = 'immutable'
 
 
@@ -396,22 +390,79 @@ def sample_from_ellipsoid(central_theta, H, epsilon, num_samples, seed=42):
     return result
 
 
-def select_candidates(models, max_instances=10, reference_model=None):
+def candidate_selection_mode(value=None):
+    """Resolve the factual-cohort rule independently of model generation."""
+    if value is None:
+        from . import recourse_campaign as campaign
+        value = (rr._ACTIVE_SETTINGS.get() or {}).get('candidate_selection', campaign.CANDIDATE_SELECTION)
+    if value not in {'reference', 'majority'}:
+        raise ValueError("candidate_selection must be 'reference' or 'majority'.")
+    return value
+
+
+def select_candidates(models, max_instances=10, reference_model=None, candidate_selection=None,
+                      order='seeded'):
+    """Select held-out factuals before any recourse search.
+
+    Rejection means probability < .5. Majority includes even-size ties:
+    2 * rejection_count >= model_count. It does not additionally require
+    rejection by the reference model. A whole forest counts as one model.
+    """
+    mode = candidate_selection_mode(candidate_selection)
+    if not models or max_instances < 0 or int(max_instances) != max_instances:
+        raise ValueError('Require a nonempty model set and a nonnegative integer instance limit.')
+    if order not in {'seeded', 'test'}:
+        raise ValueError("order must be 'seeded' or 'test'.")
     ctx = models.context
-    reference_model = reference_model or models[0]
-    with torch.no_grad():
-        p = reference_model(torch.tensor(ctx.X_test)).reshape(-1).numpy()
-    eligible = np.flatnonzero(p < 0.5)
-    # Independent RNG: selection does not depend on how many competing models were trained.
-    selected = np.random.default_rng(ctx.seed).permutation(eligible)[:max_instances]
+    reference = models[0] if reference_model is None else reference_model
+    def probabilities(model):
+        if hasattr(model, 'predict_probability'):
+            return np.asarray(model.predict_probability(ctx.X_test)).reshape(-1)
+        with torch.no_grad():
+            X = torch.as_tensor(ctx.X_test, dtype=torch.float32)
+            return np.concatenate([model(chunk).reshape(-1).cpu().numpy() for chunk in X.split(4096)])
+    predictions = np.stack([probabilities(model) for model in models], axis=1)
+    reference_p = probabilities(reference)
+    if not np.isfinite(predictions).all() or not np.isfinite(reference_p).all():
+        raise ValueError('Nonfinite model probabilities during factual selection.')
+    rejected = (predictions < .5).sum(axis=1)
+    mask = reference_p < .5 if mode == 'reference' else 2*rejected >= len(models)
+    eligible = np.flatnonzero(mask)
+    ordered = np.random.default_rng(ctx.seed).permutation(eligible) if order == 'seeded' else eligible
+    selected = ordered[:int(max_instances)]
     ctx.candidate_ids = ctx.test_ids[selected].tolist()
-    return [torch.tensor(ctx.X_test[i]) for i in selected]
+    ctx.candidate_selection = dict(mode=mode, threshold=.5, rejection_rule='probability < 0.5',
+        majority_rule='2 * rejection_count >= number_of_competing_models; ties included',
+        reference_rule='designated reference model; first competing model by default',
+        actual_models=len(models), minimum_rejections=(len(models)+1)//2 if mode == 'majority' else None,
+        eligible_instances=int(mask.sum()), requested_instances=int(max_instances),
+        selected_instances=len(selected), selected_ids=ctx.candidate_ids, order=order,
+        selected_rejection_counts=rejected[selected].tolist(),
+        selected_reference_rejected=(reference_p[selected] < .5).tolist(),
+        status='selected' if len(selected) else 'no_eligible_factuals')
+    models.metadata['candidate_selection'] = dict(ctx.candidate_selection)
+    run = rr.current_run()
+    if run is not None:
+        relative = f'seed_{ctx.seed}_fold_{run.scope.get("fold", 0)}'
+        run.save_arrays(relative+'/cohort_selection.npz', test_ids=ctx.test_ids,
+            eligible=mask, rejection_counts=rejected, reference_probabilities=reference_p,
+            selected_test_positions=selected, candidate_ids=np.asarray(ctx.candidate_ids, dtype=np.int64))
+        rr.atomic_json(run.path/relative/'cohort_selection.json', ctx.candidate_selection)
+        rr.event('factual_cohort_selected', **ctx.candidate_selection)
+    return [torch.tensor(ctx.X_test[i], dtype=torch.float32) for i in selected]
 
 
 def train_and_select_candidates(X, y, num_linear=1, num_nn_single_layer=1,
         num_nn_double_layer=1, max_instances=10, seed=42, epsilon=0.05,
         actionable_indices=None, diverse=False, dataset_name=None, context=None,
-        training_epochs=100, training_lr=0.01):
+        training_epochs=100, training_lr=0.01, diversity=None):
+    if diversity is None:
+        diversity = bool((rr._ACTIVE_SETTINGS.get() or {}).get('diversity', False))
+    if diversity:
+        from .recourse_diversity import train_and_select
+        return train_and_select(X,y,(num_linear,num_nn_single_layer,num_nn_double_layer),
+            max_instances,seed,epsilon,actionable_indices,diverse,dataset_name,context,
+            training_epochs,training_lr)
     ctx = context or prepare_split(X, y, seed, dataset_name, actionable_indices)
     ctx.epsilon = epsilon
     d = len(ctx.columns)
@@ -419,26 +470,31 @@ def train_and_select_candidates(X, y, num_linear=1, num_nn_single_layer=1,
                        epochs=training_epochs, lr=training_lr, seed=seed)
     baseline = _accuracy(base, ctx.X_validation, ctx.y_validation)
     center = torch.cat([base.linear.weight.detach().reshape(-1), base.linear.bias.detach()])
-    H = get_hessian(base, ctx.X_train)
+    from . import recourse_training as training
+    H = get_hessian(base, ctx.X_train, lambda_reg=base.training_settings['l2'])
     models = ModelSet(context=ctx)
     factories = [lambda s: LogisticRegressionModel(d, s),
                  lambda s: NeuralNetworkModelSingleLayer(d, 20, s),
                  lambda s: NeuralNetworkModelDoubleLayers(d, 50, 100, s)]
     requested = [num_linear, num_nn_single_layer, num_nn_double_layer]
-    accuracies = []
+    accuracies, admission_audit = [], []
     for kind, count in enumerate(requested):
         accepted = 0
         # Separate type streams preserve prefixes as model counts increase.
-        for attempt in range(count*20):
+        for attempt in range(count*training.effective_options(training_epochs, training_lr)["reference_max_attempt_factor"]):
             if accepted == count:
                 break
             model_seed = seed + kind*100 + attempt
             if kind == 0 and attempt == 0:
                 model = copy.deepcopy(base)
-            elif kind == 0 and not diverse:
+            elif kind == 0:
+                # Random initialization cannot diversify a uniquely optimized
+                # regularized logistic model. Sample checked hypotheses instead.
                 model = factories[kind](model_seed)
                 theta = sample_from_ellipsoid(center, H, epsilon, 1, model_seed)[0]
                 set_model_weights(model, theta)
+                training.sampled_logistic_check(model, base, ctx.X_train, ctx.y_train, epsilon)
+                if rr.current_run(): rr.current_run().save_training(model)
             else:
                 model = factories[kind](model_seed)
                 mask = np.ones(d)
@@ -448,17 +504,23 @@ def train_and_select_candidates(X, y, num_linear=1, num_nn_single_layer=1,
                         if i not in actionable_indices and rng.random() < 0.3:
                             mask[i] = 0
                     model = FeatureMaskedModel(model, mask)
-                train_model(model, ctx.X_train, ctx.y_train,
-                            epochs=training_epochs, lr=training_lr, seed=model_seed)
+                try:
+                    train_model(model, ctx.X_train, ctx.y_train,
+                                epochs=training_epochs, lr=training_lr, seed=model_seed)
+                except training.TrainingCheckError:
+                    pass  # Measured failure is excluded below, with a saved admission record.
             model.eval()
             acc = _accuracy(model, ctx.X_validation, ctx.y_validation)
+            accepted_candidate = bool(model.training_settings['passed'] and baseline-acc <= epsilon+1e-12)
+            admission_audit.append(dict(architecture_kind=kind, attempt=attempt, seed=model_seed,
+                accepted=accepted_candidate, validation_accuracy=acc, training=model.training_settings))
             rr.event('model_admission', architecture_kind=kind, attempt=attempt, model_seed=model_seed,
                 validation_accuracy=acc, baseline_validation_accuracy=baseline,
-                accepted=baseline-acc <= epsilon,
+                accepted=accepted_candidate, training=model.training_settings,
                 training_artifact=getattr(model, 'training_artifact', None),
                 sampled_linear_parameters=([*linear_parameters(model)[0].tolist(), float(linear_parameters(model)[1])]
                     if kind == 0 else None))
-            if baseline-acc <= epsilon:
+            if accepted_candidate:
                 model.recourse_context = ctx
                 models.append(model)
                 accuracies.append(acc)
@@ -468,9 +530,12 @@ def train_and_select_candidates(X, y, num_linear=1, num_nn_single_layer=1,
                                'requested counts are not silently relabeled.')
     if not models:
         raise ValueError('At least one model is required')
-    models.metadata = {'requested_counts': requested, 'actual_count': len(models),
+    models.metadata = {'training_protocol': training.PROTOCOL, 'admission_audit': admission_audit,
+                       'requested_counts': requested, 'actual_count': len(models),
                        'validation_accuracies': accuracies, 'baseline_validation_accuracy': baseline,
                        'split_seed': ctx.seed, 'selection_set': 'validation'}
+    from .recourse_diversity import describe_set
+    models.metadata.update(diversity=False,diversity_protocol='checked_reference_v2',**describe_set(models))
     return models, select_candidates(models, max_instances)
 
 
@@ -483,8 +548,8 @@ def train_and_select_candidates_diverse(X, y, num_linear=1, num_nn_single_layer=
 
 
 def train_and_select_candidates_rashomon(X, y, max_instances=10, seed=42):
-    # Preserve the legacy helper's 500 epochs, .01 learning rate, four models,
-    # and five repetitions. Its protocol is now explicitly repeated holdout.
+    # Compatibility helper: checked training with up to 500 Adam warmup epochs,
+    # four models, and five repeated holdout splits.
     result = None
     for repetition in range(5):
         result = train_and_select_candidates(X, y, 4, 0, 0, max_instances, seed+repetition,
@@ -501,19 +566,22 @@ class Constraints:
 
 
 def constraints_for(models, x0, immutable_indices=None, policy=None):
+    """Intersect policy restrictions with explicit and context immutability."""
     x = x0.detach().cpu().numpy().astype(float)
     lo, hi = np.full(len(x), -np.inf), np.full(len(x), np.inf)
     ctx = getattr(models, 'context', None)
     if ctx is None and len(models):
         ctx = getattr(models[0], 'recourse_context', None)
-    indices = list(immutable_indices or [])
+    indices = [] if immutable_indices is None else list(immutable_indices)
     if ctx is not None and ctx.actionable_indices is not None:
         indices = sorted(set(indices) | (set(range(len(x)))-set(ctx.actionable_indices)))
     policy = policy or (ctx.actionability_policy if ctx is not None else 'immutable')
     if ctx is not None and ctx.name == 'COMPAS' and policy == 'compas_appendix':
         age = ctx.columns.index('age')
-        indices = [i for i, c in enumerate(ctx.columns) if c.startswith('sex')]
+        # A policy may add restrictions, but must not unfreeze existing features.
+        indices = sorted(set(indices) | {i for i, c in enumerate(ctx.columns) if c.startswith('sex')})
         lo[age], hi[age] = x[age], x[age]+5.0/ctx.scaler.scale_[age]
+    # Fixed-feature bounds take precedence over directional policy bounds.
     lo[indices], hi[indices] = x[indices], x[indices]
     return Constraints(lo, hi, indices, policy)
 
