@@ -1,0 +1,13 @@
+{
+  "tree-tradeoff": "experiments/trade-off-trees/phase_main_10x20_v2_0/snapshots/20261027T013059.363051Z_tree_tradeoff_10x20",
+  "tree-literature": "experiments/trade-off-trees/phase_literature_baselines_10x20_v1_2/snapshots/20261105T190500Z_approved_failure_continuation",
+  "tree-cost": "experiments/cost-of-multiplicity-tree/phase_main_10x20_v2_0/snapshots/20261027T205329.331243Z_tree_multiplicity_10x20",
+  "tree-convergence": "experiments/convergence-tree/phase_main_10x20_v3_1/snapshots/20261026T021254.277705Z_recovery_10x20",
+  "linear-cost": "experiments/cost-of-multiplicity/phase_linear_expansion_v1_1/snapshots/20261021T131053.361782Z_10be790d77",
+  "neural-cost": "experiments/cost-of-multiplicity/phase_neural_bounded_recovery_v1_2/snapshots/20261021T220817.352731Z_recovery",
+  "dt-generalization": "experiments/tree-samarchitecture/phase_dt_unseen_10x20_v2_0/snapshots/20261028T023624.701021Z_dt_unseen_10x20",
+  "rf-generalization": "experiments/tree-samarchitecture/phase_rf_verification_recovery_v2_2/snapshots/20261104T091147Z_certificate_audit_only",
+  "non-tree-tradeoff": "experiments/trade-off_paper/phase_10x20/snapshots/20261017T004739.247649Z_6ffc650a4c",
+  "linear-generalization": "experiments/linear_exact_unseen/phase_full/snapshots/20261018T193056.984145Z_2353a4b874",
+  "neural-generalization": "experiments/neural_samearchitecture/phase_focused_10x5_v3_1/snapshots/20261021T005310.856425Z_b161b6ef3f"
+}

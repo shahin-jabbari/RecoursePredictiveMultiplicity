@@ -1,8 +1,8 @@
-name: recourse-v6diverse
+name: recourse-from-scratch
 channels:
   - conda-forge
 dependencies:
-  - python=3.11
+  - python=3.9.17
   - pip
   - pip:
       - -r requirements.txt
