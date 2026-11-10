@@ -1,0 +1,132 @@
+{
+  "study": "V7_diverse_per_instance_convergence_training_v2_5x5",
+  "datasets": [
+    "COMPAS",
+    "Polish",
+    "German",
+    "Synthetic",
+    "Give_Me_Some_Credit",
+    "Folktables"
+  ],
+  "seeds": [
+    401,
+    402,
+    403,
+    404,
+    405
+  ],
+  "instances": 5,
+  "families": [
+    "linear",
+    "neural",
+    "mixed"
+  ],
+  "model_sizes": [
+    6,
+    12,
+    24
+  ],
+  "budgets": {
+    "Synthetic": [
+      1.0,
+      2.0,
+      5.0
+    ],
+    "COMPAS": [
+      1.0,
+      2.0,
+      5.0
+    ],
+    "Polish": [
+      1.0,
+      2.0,
+      5.0
+    ],
+    "German": [
+      1.0,
+      2.0,
+      5.0
+    ],
+    "Give_Me_Some_Credit": [
+      50.0,
+      60.0,
+      75.0
+    ],
+    "Folktables": [
+      2.0,
+      5.0,
+      10.0
+    ]
+  },
+  "rounds": 1000,
+  "checkpoints": [
+    1,
+    10,
+    25,
+    50,
+    100,
+    200,
+    300,
+    500,
+    750,
+    1000
+  ],
+  "raw_gap_thresholds": [
+    0.005,
+    0.01,
+    0.02,
+    0.05,
+    0.1
+  ],
+  "primary_raw_gap_threshold": 0.005,
+  "confirmations": 2,
+  "raw_outer_rate": 1.0,
+  "oracle_maxiter": 100,
+  "evaluation_maxiter": 300,
+  "validation_tolerance": 0.05,
+  "diversity_accuracy_caliper": 0.02,
+  "diversity_candidate_pool": 32,
+  "global_seconds_per_checkpoint": 1.0,
+  "global_seconds_final": 5.0,
+  "save_every": 50,
+  "loss": "raw cross-entropy / logistic loss for every family",
+  "diversity": true,
+  "candidate_selection": "common intersection of majority rejection across all nine sets; ties included",
+  "return_rule": "full arithmetic average of oracle responses",
+  "evaluation": "post-hoc, cannot modify the ORPM trajectory or its warm starts",
+  "inference": "per-instance intervals and threshold crossings; seed-cluster intervals for fractions",
+  "profile": "paper_training_v2_5x5",
+  "rate_calibration": {
+    "datasets": [
+      "COMPAS",
+      "German"
+    ],
+    "seed": 9902,
+    "individuals_per_dataset": 1,
+    "models": 24,
+    "budget": 2.0,
+    "rates": [
+      0.06456964145887714,
+      0.25,
+      1.0
+    ],
+    "selection": "1.0 reduces certified convex final gaps below .005 on both disjoint calibration cases; no guarantee for all neural cases",
+    "note": "Inherited outer rate for controlled comparison; classifier training has changed. No new universal rate guarantee."
+  },
+  "training_protocol": {
+    "l2": 0.001,
+    "linear_maxiter": 2000,
+    "linear_gap_tolerance": 1e-08,
+    "neural_adam_epochs": 100,
+    "neural_adam_lr": 0.01,
+    "neural_maxiter": 2000,
+    "neural_gradient_tolerance": 0.001,
+    "batch_size": 4096,
+    "candidate_pool_size": 32,
+    "reference_max_attempt_factor": 20,
+    "neural_probe_maxiter": 300,
+    "neural_probe_count": 4,
+    "neural_stability_tolerance": 1e-06
+  },
+  "preflight_all_blocks": true
+}
