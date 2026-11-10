@@ -1,0 +1,91 @@
+{
+  "study": "V7_linear_exact_unseen_pilot",
+  "protocol_version": "1.0",
+  "source_run": "/Users/sj987/Documents/ChatGPT/Code/Predictive_Multiplicity_Recourse/V7/experiments/trade-off_paper/phase_10x20/results/20261017T004739.247649Z_6ffc650a4c",
+  "datasets": [
+    "Synthetic",
+    "COMPAS",
+    "Give_Me_Some_Credit"
+  ],
+  "seeds": [
+    401,
+    402,
+    403
+  ],
+  "instances": 5,
+  "model_sizes": [
+    6,
+    12,
+    24
+  ],
+  "budgets": {
+    "Synthetic": [
+      0,
+      0.5,
+      1.5,
+      3
+    ],
+    "COMPAS": [
+      0,
+      0.5,
+      2,
+      5
+    ],
+    "Give_Me_Some_Credit": [
+      0,
+      5,
+      25,
+      75
+    ]
+  },
+  "methods": [
+    "ORPM",
+    "ADV",
+    "ROAR",
+    "ElliCE",
+    "Reference",
+    "ExactMaxMargin",
+    "ExactMinL2"
+  ],
+  "rounds": {
+    "default": 200,
+    "Give_Me_Some_Credit": 1000
+  },
+  "raw_outer_rate": 1.0,
+  "oracle_maxiter": 100,
+  "baseline_maxiter": 500,
+  "reference_maxiter": 300,
+  "baseline_lr": 0.01,
+  "ellice_epsilon": 0.05,
+  "cohort_order_seed_offset": 85000,
+  "unseen_count": 50,
+  "unseen_seed_offset": 50000000,
+  "unseen_max_attempts": 10000,
+  "unseen_epsilon": 0.05,
+  "validation_accuracy_allowance": 0.05,
+  "solver": {
+    "time_limit_seconds": 30,
+    "feasibility_tolerance": 1e-09,
+    "barrier_tolerance": 1e-10,
+    "certificate_tolerance": 1e-05,
+    "evaluation_logit_tolerance": 1e-07
+  },
+  "expected_records": 3780,
+  "expected_settings": 540,
+  "ci": {
+    "level": 0.95,
+    "unit": "equally weighted seed means",
+    "method": "pointwise Student-t, df=2; paired differences within seed",
+    "independent_seeds": 3
+  },
+  "readiness": {
+    "all_records_required": true,
+    "all_exact_certificates_required": true,
+    "all_source_hashes_unchanged": true,
+    "all_unseen_panels_admissible_and_disjoint": true,
+    "all_returns_feasible": true,
+    "all_cohort_prefixes_reproducible": true,
+    "independent_verification_passed": true,
+    "scientific_claims": "pilot descriptive only; no outcome threshold is used to decide engineering readiness"
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "study": "V7_expansion_budget_address_validation",
+  "protocol_version": "1.1-expansion",
+  "source_run": "/Users/sj987/Documents/ChatGPT/Code/Predictive_Multiplicity_Recourse/V7/experiments/trade-off_paper/phase_10x20/results/20261017T004739.247649Z_6ffc650a4c",
+  "datasets": [
+    "Synthetic"
+  ],
+  "seeds": [
+    401
+  ],
+  "instances": 1,
+  "model_sizes": [
+    24
+  ],
+  "budgets": {
+    "Synthetic": [
+      0,
+      0.5,
+      1,
+      1.5,
+      2,
+      3
+    ]
+  },
+  "methods": [
+    "ORPM",
+    "ADV",
+    "ROAR",
+    "ElliCE",
+    "Reference",
+    "ExactMaxMargin",
+    "ExactMinL2"
+  ],
+  "rounds": {
+    "default": 200,
+    "Give_Me_Some_Credit": 1000
+  },
+  "raw_outer_rate": 1.0,
+  "oracle_maxiter": 100,
+  "baseline_maxiter": 500,
+  "reference_maxiter": 300,
+  "baseline_lr": 0.01,
+  "ellice_epsilon": 0.05,
+  "cohort_order_seed_offset": 85000,
+  "unseen_count": 50,
+  "unseen_seed_offset": 50000000,
+  "unseen_max_attempts": 10000,
+  "unseen_epsilon": 0.05,
+  "validation_accuracy_allowance": 0.05,
+  "solver": {
+    "time_limit_seconds": 30,
+    "feasibility_tolerance": 1e-09,
+    "barrier_tolerance": 1e-10,
+    "certificate_tolerance": 1e-05,
+    "evaluation_logit_tolerance": 1e-07
+  },
+  "expected_records": 42,
+  "expected_settings": 6,
+  "ci": {
+    "level": 0.95,
+    "unit": "equally weighted seed means",
+    "method": "pointwise Student-t, df=9; paired differences within seed",
+    "independent_seeds": 10
+  },
+  "readiness": {
+    "all_records_required": true,
+    "all_exact_certificates_required": true,
+    "all_source_hashes_unchanged": true,
+    "all_unseen_panels_admissible_and_disjoint": true,
+    "all_returns_feasible": true,
+    "all_cohort_prefixes_reproducible": true,
+    "independent_verification_passed": true,
+    "scientific_claims": "Estimate budget/count trade-offs and conditional within-family unseen transfer; no universal generalization claim."
+  },
+  "status": "AUTHORIZED",
+  "phase": "full_10x20",
+  "pilot_run": "/Users/sj987/Documents/ChatGPT/Code/Predictive_Multiplicity_Recourse/V7/experiments/linear_exact_unseen/results/20261018T180330.097982Z_98de9f6e9a",
+  "preserved_pilot_records": 28,
+  "new_records": 14,
+  "expected_panels": 1,
+  "cohort_model_sizes": [
+    6,
+    12,
+    24
+  ],
+  "validation": true,
+  "allow_model_training": false,
+  "pilot_estimate_note": "Three-seed pilot is reused; full-study results are an expansion, not an independent replication."
+}
