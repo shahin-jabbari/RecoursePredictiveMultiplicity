@@ -1,0 +1,165 @@
+{
+  "version": "1.1",
+  "study": "neural_cost_and_disparity_bounded_expansion",
+  "source_run": "/Users/sj987/Documents/ChatGPT/Code/Predictive_Multiplicity_Recourse/V7/experiments/trade-off_paper/phase_10x20/results/20261017T004739.247649Z_6ffc650a4c",
+  "disparity_result": "/Users/sj987/Documents/ChatGPT/Code/Predictive_Multiplicity_Recourse/V7/experiments/disparity-of-multiplicity/phase_neural_bounded_v1_1/results/20261021T200652.743024Z_bounded_10x4",
+  "datasets": [
+    "Synthetic",
+    "COMPAS",
+    "Polish",
+    "German",
+    "Give_Me_Some_Credit",
+    "Folktables"
+  ],
+  "source_seeds": [
+    401,
+    402,
+    403,
+    404,
+    405,
+    406,
+    407,
+    408,
+    409,
+    410
+  ],
+  "pilot_seeds": [
+    401,
+    402,
+    403,
+    404,
+    405,
+    406,
+    407,
+    408,
+    409,
+    410
+  ],
+  "pilot_people_per_seed": 4,
+  "model_counts": [
+    6,
+    12,
+    24
+  ],
+  "budgets": {
+    "Synthetic": [
+      0,
+      0.5,
+      1,
+      1.5,
+      2,
+      3,
+      5
+    ],
+    "COMPAS": [
+      0,
+      0.5,
+      1,
+      1.5,
+      2,
+      3,
+      5
+    ],
+    "Polish": [
+      0,
+      0.25,
+      0.5,
+      1,
+      2,
+      3,
+      5
+    ],
+    "German": [
+      0,
+      0.5,
+      1,
+      1.5,
+      2,
+      3,
+      5
+    ],
+    "Give_Me_Some_Credit": [
+      0,
+      5,
+      10,
+      25,
+      50,
+      60,
+      75,
+      100
+    ],
+    "Folktables": [
+      0,
+      0.5,
+      1,
+      2,
+      3,
+      5,
+      7.5,
+      10
+    ]
+  },
+  "groups": {
+    "COMPAS": {
+      "feature": "sex=female",
+      "kind": "coded",
+      "first_code": 1,
+      "codes": [
+        0,
+        1
+      ],
+      "first": "female_recorded",
+      "second": "male_recorded"
+    },
+    "Folktables": {
+      "feature": "SEX",
+      "kind": "coded",
+      "first_code": 2,
+      "codes": [
+        1,
+        2
+      ],
+      "first": "female_recorded",
+      "second": "male_recorded"
+    },
+    "German": {
+      "feature": "Attribute13",
+      "kind": "age",
+      "threshold": 40,
+      "first": "under_40",
+      "second": "40_and_older"
+    },
+    "Give_Me_Some_Credit": {
+      "feature": "age",
+      "kind": "age",
+      "threshold": 40,
+      "first": "under_40",
+      "second": "40_and_older"
+    }
+  },
+  "maximum_optimization_seconds_per_solve": 10.0,
+  "threads": 1,
+  "seed": 0,
+  "expected_cases": 240,
+  "expected_cost_comparisons": 720,
+  "expected_tasks": 6480,
+  "expected_new_tasks": 5508,
+  "preserved_tasks": 972,
+  "preserved_cases": 36,
+  "source_pilot": "/Users/sj987/Documents/ChatGPT/Code/Predictive_Multiplicity_Recourse/V7/experiments/cost-of-multiplicity/phase_neural_reuse_pilot_v1_0/results/20261021T163355.360251Z_neural_reuse",
+  "runtime_cap_seconds": 82800,
+  "source_cases": 1200,
+  "source_orpm_settings": 26400,
+  "full_cost_tasks": 32400,
+  "training": false,
+  "new_unseen_models": false,
+  "success_logit_threshold": 0.0,
+  "budget_tolerance": 1e-08,
+  "cost_certificate_tolerance": "1e-4*(1+maximum_budget)",
+  "inference": "pointwise descriptive Student t intervals across seed means; expanded n=10 df=9; reused cohort n=10 df=9; numerical bounds separate",
+  "scope": "saved neural-only heterogeneous architecture sets; twelve 20-ReLU and twelve 50/100-ReLU networks, balanced at each nested size",
+  "cohort_rule": "Ten seeds, four saved people per dataset/seed. Preserve both pilot people first where present; append in saved order to reach two per group where available, then fill shortages in saved order. Synthetic/Polish first four. No new people outside the saved twenty.",
+  "structural_estimands": "capped singleton, hardest singleton and common-action minimum standardized L2 at dataset maximum budget; cost and success partial-identification bounds",
+  "limits": "10 seconds per actual optimization; supervisor stops the entire worker after 23 wall-clock hours including verification and reporting. No automatic restart or further expansion.",
+  "expected_maximum_optimization_hours": 15.3
+}

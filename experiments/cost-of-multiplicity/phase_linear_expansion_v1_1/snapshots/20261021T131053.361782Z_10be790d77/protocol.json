@@ -1,0 +1,107 @@
+{
+  "datasets": [
+    "Synthetic",
+    "COMPAS",
+    "Polish",
+    "German",
+    "Give_Me_Some_Credit",
+    "Folktables"
+  ],
+  "seeds": [
+    401,
+    402,
+    403,
+    404,
+    405,
+    406,
+    407,
+    408,
+    409,
+    410
+  ],
+  "model_sizes": [
+    6,
+    12,
+    24
+  ],
+  "budgets": {
+    "Synthetic": [
+      0,
+      0.5,
+      1,
+      1.5,
+      2,
+      3,
+      5
+    ],
+    "COMPAS": [
+      0,
+      0.5,
+      1,
+      1.5,
+      2,
+      3,
+      5
+    ],
+    "Polish": [
+      0,
+      0.25,
+      0.5,
+      1,
+      2,
+      3,
+      5
+    ],
+    "German": [
+      0,
+      0.5,
+      1,
+      1.5,
+      2,
+      3,
+      5
+    ],
+    "Give_Me_Some_Credit": [
+      0,
+      5,
+      10,
+      25,
+      50,
+      60,
+      75,
+      100
+    ],
+    "Folktables": [
+      0,
+      0.5,
+      1,
+      2,
+      3,
+      5,
+      7.5,
+      10
+    ]
+  },
+  "rounds": {
+    "default": 200,
+    "Give_Me_Some_Credit": 1000
+  },
+  "raw_outer_rate": 1.0,
+  "oracle_maxiter": 100,
+  "solver": {
+    "time_limit_seconds": 30,
+    "feasibility_tolerance": 1e-09,
+    "barrier_tolerance": 1e-10,
+    "certificate_tolerance": 1e-05,
+    "evaluation_logit_tolerance": 1e-07
+  },
+  "cohort_order_seed_offset": 85000,
+  "version": "1.1",
+  "phase": "stratified_linear_cohort_expansion",
+  "new_training": false,
+  "new_unseen_evaluation": false,
+  "original_protocol_sha256": "fcdea978bf41cb1669fd8f909fe66e427c6761426a26cd222e96c47bebdd11c6",
+  "expected_settings": 40590,
+  "preserved_settings": 26400,
+  "new_settings": 14190
+}
