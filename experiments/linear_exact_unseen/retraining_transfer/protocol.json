@@ -1,0 +1,94 @@
+{
+  "study": "V7_retrained_logistic_transfer_pilot",
+  "version": "1.0",
+  "source_full_run": "/Users/sj987/Documents/ChatGPT/Code/Predictive_Multiplicity_Recourse/V7/experiments/linear_exact_unseen/phase_full/results/20261018T193056.984145Z_2353a4b874",
+  "pilot_run": "/Users/sj987/Documents/ChatGPT/Code/Predictive_Multiplicity_Recourse/V7/experiments/linear_exact_unseen/results/20261018T180330.097982Z_98de9f6e9a",
+  "datasets": [
+    "Synthetic",
+    "COMPAS",
+    "Give_Me_Some_Credit"
+  ],
+  "seeds": [
+    401,
+    402,
+    403,
+    404,
+    405,
+    406,
+    407,
+    408,
+    409,
+    410
+  ],
+  "people_per_seed": 20,
+  "competing_model_counts": [
+    6,
+    12,
+    24
+  ],
+  "unseen_panel_sizes": [
+    5,
+    10,
+    25,
+    50
+  ],
+  "methods": [
+    "ORPM",
+    "ADV",
+    "ROAR",
+    "ElliCE",
+    "Reference",
+    "ExactMaxMargin",
+    "ExactMinL2"
+  ],
+  "budgets": {
+    "Synthetic": [
+      0,
+      0.5,
+      1,
+      1.5,
+      2,
+      3,
+      5
+    ],
+    "COMPAS": [
+      0,
+      0.5,
+      1,
+      1.5,
+      2,
+      3,
+      5
+    ],
+    "Give_Me_Some_Credit": [
+      0,
+      5,
+      10,
+      25,
+      50,
+      60,
+      75,
+      100
+    ]
+  },
+  "panels": [
+    "hessian_existing",
+    "bootstrap_full_feature",
+    "bootstrap_matched_mask"
+  ],
+  "models_per_new_panel": 50,
+  "bootstrap_replicates": 50,
+  "bootstrap": "ordinary row bootstrap from the saved standardized training split, n rows with replacement",
+  "fit_objective": "mean binary cross entropy + 0.001/2 times squared L2 norm of weights and intercept",
+  "mask_arm": "sample feature masks uniformly with replacement from the first 24 saved competing hypotheses; fit each bootstrap draw using that mask",
+  "validation_filter": "none; validation accuracy is diagnostic only, with no panel rejection or tuning",
+  "unseen_panel_freeze": "all panels frozen before evaluation of saved recourses",
+  "saved_recourse_points": "reuse the full-study saved outputs for the identical 20-person cohorts, budgets, methods, and competing-set sizes; no recourse optimization is rerun",
+  "primary_metrics": [
+    "all-K joint validity",
+    "mean acceptance across K models"
+  ],
+  "ci": "pointwise 95% Student-t across 10 equally weighted seed means (df=9); paired within seed",
+  "training_data": "saved training split only; fixed original scaler; test rows are used only for the preselected original cohort and evaluation",
+  "limitations": "The three datasets and seeds reuse the full-study splits and cohorts; this is an extension and not an independent replication. Bootstrap draws are conditional on these training samples."
+}
