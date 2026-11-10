@@ -1,0 +1,52 @@
+{
+  "version": "1.0",
+  "created_date": "2026-10-21",
+  "phase": "exploratory_existing_cohort_linear",
+  "cost_study": "../cost-of-multiplicity",
+  "groups": {
+    "COMPAS": {
+      "feature": "sex=female",
+      "kind": "coded",
+      "codes": [
+        0,
+        1
+      ],
+      "first_code": 1,
+      "first": "female_recorded",
+      "second": "male_recorded"
+    },
+    "Folktables": {
+      "feature": "SEX",
+      "kind": "coded",
+      "codes": [
+        1,
+        2
+      ],
+      "first_code": 2,
+      "first": "female_recorded",
+      "second": "male_recorded"
+    },
+    "German": {
+      "feature": "Attribute13",
+      "kind": "age",
+      "threshold": 40,
+      "first": "under_40",
+      "second": "40_and_older"
+    },
+    "Give_Me_Some_Credit": {
+      "feature": "age",
+      "kind": "age",
+      "threshold": 40,
+      "first": "under_40",
+      "second": "40_and_older"
+    }
+  },
+  "group_pairing": "same complete-pair seeds for both group means and difference",
+  "ci": {
+    "level": 0.95,
+    "type": "pointwise descriptive Student t across equally weighted seed means",
+    "pair_within_seed": true
+  },
+  "future_expansion_target_per_group_per_seed": 20,
+  "cohort_expansion_launched": false
+}
