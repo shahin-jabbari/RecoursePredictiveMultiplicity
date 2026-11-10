@@ -1,3 +1,6 @@
+Code for the paper "Optimizing Recourse Under Predictive Multiplicity" by Shahin Jabbari
+https://arxiv.org/abs/2611.05774
+
 # Recourse experiments, from scratch
 
 This is the code, data and settings edition of the V7 experiments. It includes seven dataset files as read by the original programs, the training and experiment code, and the original study settings. It contains no trained models, precomputed splits or panels, recourse results, plots, PDFs or execution logs. Some dataset files are the original **preprocessed inputs** (for example, the Folktables extract), rather than unprocessed source-agency records; see `dataset/README.txt` and `dataset/manifest.json`.
